@@ -1,7 +1,7 @@
 pragma solidity ^0.8.19;
 import "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol"; //chainlink automation interface
 
-contract TwoPhaseCommit is AutomationCompatibleInterface {
+contract TwoPhaseDissemination is AutomationCompatibleInterface {
     uint256 public dataCounter;
 
     struct StoredData {
