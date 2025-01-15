@@ -35,6 +35,7 @@ var (
     PrivateKey string
     client     *ethclient.Client
     contractABI abi.ABI
+    NetworkEndpoint string = "wss://api.avax-test.network/ext/bc/C/ws"
 )
 
 
@@ -306,8 +307,100 @@ func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) 
 
 func (c *ContractInteractionInterface) Listen() error {
     //listen to the smart contract for events
+    ctx := context.Background()
+    client, err := ethclient.Dial(NetworkEndpoint)
+    if err != nil {
+        return fmt.Errorf("failed to connect to the network: %v", err)
+    }
+
+    currentBlock, err := client.BlockByNumber(ctx, nil)
+    if err != nil {
+        return fmt.Errorf("failed to retrieve current block: %v", err)
+    }
+
+    query := ethereum.FilterQuery{
+        Addresses: []common.Address{c.ContractAddress},
+        FromBlock: currentBlock.Number(),
+    }
+
+    logs := make(chan types.Log)
+    sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
+    if err != nil {
+        return fmt.Errorf("failed to subscribe to logs: %v", err)
+    }
+
+    go func() {
+        defer sub.Unsubscribe() 
+
+        for {
+            select {
+            case err := <-sub.Err():
+                log.Printf("error received: %v", err)
+                sub.Unsubscribe()
+
+                currentBlock, err := client.BlockNumber(ctx)
+                if err != nil {
+                    log.Printf("failed to retrieve current block: %v", err)
+                    return  
+                }
+
+                query.FromBlock = big.NewInt(int64(currentBlock))
+                sub, err = client.SubscribeFilterLogs(context.Background(), query, logs)
+                if err != nil {
+                    log.Printf("failed to subscribe to logs: %v", err)
+                    return 
+                }
+
+            case vLog := <-logs:
+               handleEvent(c, vLog) 
+
+            case <- ctx.Done():
+                return
+            }
+        }
+    }()
+
+
     return nil
 }
 
+
+func handleEvent(c *ContractInteractionInterface, vLog types.Log) {
+    txHash := vLog.TxHash.Hex()
+    receiveTime := time.Now()
+    fmt.Printf("Received log: %s\n", txHash)
+    fmt.Printf("Received at: %s\n", receiveTime)
+    switch vLog.Topics[0].Hex() {
+    case c.ContractABI.Events["ReleaseEncryptedData"].ID.Hex():
+        go func(){
+            var event t.ReleaseEncryptedData
+            err := c.ContractABI.UnpackIntoInterface(&event, "ReleaseEncryptedData", vLog.Data)
+            if err != nil {
+                log.Printf("failed to unpack event: %v", err)
+                return
+            }
+            
+            data, err := h.DecryptData(event.EncryptedData, c.PrivateKeys[event.DataName])
+            if err != nil {
+                log.Printf("failed to decrypt data: %v", err)
+                return
+            }
+
+            log.Printf("Data received: %s", data)
+        }()
+    case c.ContractABI.Events["KeyReleaseRequested"].ID.Hex():
+        go func(){
+            
+
+        }()
+    case c.ContractABI.Events["KeyReleased"].ID.Hex():
+        go func(){
+
+            }()
+
+    default:
+        log.Printf("unknown event: %s", vLog.Topics[0].Hex())
+    }
+}
 
 

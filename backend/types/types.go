@@ -29,6 +29,14 @@ type KeyReleasedEvent struct {
     DataName string 
 }
 
+type ReleaseEncryptedData struct {
+    EncryptedData []byte `abi:"encryptedData"`
+    Owner string `abi:"owner"`
+    DataName string `abi:"dataName"`
+    releaseTime *big.Int `abi:"releaseTime"`
+}
+
+
 
 type KeyReleaseRequestedEvent struct {
     Index *big.Int `abi:"index"`
