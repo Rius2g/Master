@@ -6,6 +6,19 @@ import (
 )
 
 
+type KeyReleased struct {
+    PrivateKey []byte `abi:"privateKey"`
+    Owner string `abi:"owner"`
+    DataName string `abi:"dataName"`
+}
+
+type KeyReleaseRequested struct {
+    Index *big.Int `abi:"index"`
+    Owner string `abi:"owner"`
+    DataName string `abi:"dataName"`
+}
+
+
 type PushEncryptedDataEvent struct {
     EncryptedData []byte
     Owner string
