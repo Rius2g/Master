@@ -236,9 +236,14 @@ func (c *ContractInteractionInterface) RetriveCurrentDataID() error {
 }
 
 func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) error {
-    if len(dataName) == 0 {
+    if len(dataName) == 0 || len(owner) == 0 {
         return fmt.Errorf("invalid input data")
     }
+
+    if _, ok := c.PrivateKeys[dataName]; !ok {
+        return fmt.Errorf("private key not found for data name: %s", dataName) 
+    }
+
 
     privKey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
     if err != nil {
@@ -390,12 +395,28 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log) {
         }()
     case c.ContractABI.Events["KeyReleaseRequested"].ID.Hex():
         go func(){
-            
+            var event t.KeyReleaseRequested
+            err := c.ContractABI.UnpackIntoInterface(&event, "KeyReleaseRequested", vLog.Data)
+            if err != nil {
+                log.Printf("failed to unpack event: %v", err)
+                return
+            }
+
+            log.Printf("Key release requested: %s", event.DataName)
+            c.SubmitPrivateKey(event.DataName, event.Owner)  
 
         }()
     case c.ContractABI.Events["KeyReleased"].ID.Hex():
         go func(){
+            var event t.KeyReleased
+            err := c.ContractABI.UnpackIntoInterface(&event, "KeyReleased", vLog.Data)
+            if err != nil {
+                log.Printf("failed to unpack event: %v", err)
+                return 
+            }
 
+            log.Printf("Key released: %s", event.PrivateKey)
+            c.PrivateKeys[event.DataName] = event.PrivateKey
             }()
 
     default:
