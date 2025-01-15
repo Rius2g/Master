@@ -7,12 +7,12 @@ import (
     "os"
     "log"
     "strings"
-//    "crypto/sha256"
     "context"
     "math/big" 
 
     "time"
     h "Master/helper"
+    t "Master/types"
 
 
    "github.com/ethereum/go-ethereum"
@@ -173,10 +173,66 @@ func (c *ContractInteractionInterface) Upload(data, owner, dataName string, rele
     return nil
 }
 
-func (c *ContractInteractionInterface) Retrieve() error {
+func (c *ContractInteractionInterface) RetrieveMissing() error {
+    //this should ping the getMissingDataItems function in the contract and return the data that is missing
+    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    defer cancel()
+
+    input, err := c.ContractABI.Pack("getMissingDataItems", big.NewInt(int64(c.dataIdCounter)))
+    if err != nil {
+        return fmt.Errorf("failed to pack input data: %v", err)
+    }
+
+    result, err := c.Client.CallContract(ctx, ethereum.CallMsg{
+        To:   &c.ContractAddress,
+        Data: input,
+    }, nil) // nil for latest block
+    if err != nil {
+        return fmt.Errorf("failed to call contract: %v", err)
+    }
+
+    var returnVal []t.StoredData
+    err = c.ContractABI.UnpackIntoInterface(&returnVal, "getMissingDataItems", result)
+    if err != nil {
+        return fmt.Errorf("failed to unpack return value: %v", err)
+    }
+
+    for _, data := range returnVal {
+        c.EncryptedData[data.DataName] = data.EncryptedData
+    }
+
     return nil
 }
 
+func (c *ContractInteractionInterface) RetriveCurrentDataID() error {
+    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    defer cancel()
+
+    // Pack the function call data
+    input, err := c.ContractABI.Pack("getCurrentDataId")
+    if err != nil {
+        return fmt.Errorf("failed to pack input data: %v", err)
+    }
+
+    // Make a call instead of a transaction
+    result, err := c.Client.CallContract(ctx, ethereum.CallMsg{
+        To:   &c.ContractAddress,
+        Data: input,
+    }, nil) // nil for latest block
+    if err != nil {
+        return fmt.Errorf("failed to call contract: %v", err)
+    }
+
+    // Unpack the result - fixing the Unpack call
+    var returnVal *big.Int
+    err = c.ContractABI.UnpackIntoInterface(&returnVal, "getCurrentDataId", result)
+    if err != nil {
+        return fmt.Errorf("failed to unpack return value: %v", err)
+    }
+
+    c.dataIdCounter = uint(returnVal.Uint64())
+    return nil
+}
 
 func (c *ContractInteractionInterface) Listen() error {
     return nil
