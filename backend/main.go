@@ -234,7 +234,78 @@ func (c *ContractInteractionInterface) RetriveCurrentDataID() error {
     return nil
 }
 
+func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) error {
+    if len(dataName) == 0 {
+        return fmt.Errorf("invalid input data")
+    }
+
+    privKey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
+    if err != nil {
+        return fmt.Errorf("failed to parse private key: %v", err)
+    }
+
+    auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(43113))
+    if err != nil {
+        return fmt.Errorf("failed HexToECDSA: %v", err)
+    }
+
+    input, err := c.ContractABI.Pack("releaseKey", c.PrivateKeys[dataName])
+    if err != nil {
+        return fmt.Errorf("failed to pack input data: %v", err)
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    defer cancel()
+
+    gasPrice, err := c.Client.SuggestGasPrice(ctx)
+    if err != nil {
+        return fmt.Errorf("failed to suggest gas price: %v", err)
+    }
+
+    gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
+        From: auth.From,
+        To:   &c.ContractAddress,
+        Gas:  0,
+        GasPrice: gasPrice,
+        Value: big.NewInt(0),
+        Data: input,
+    })
+
+    if err != nil {
+        return fmt.Errorf("failed to estimate gas: %v", err)
+    }
+
+    gasLimit = uint64(float64(gasLimit) * 1.2)
+        
+    nonce, err := c.Client.PendingNonceAt(ctx, auth.From)
+    if err != nil {
+        return fmt.Errorf("failed to retrieve nonce: %v", err)
+    }
+
+    tx := types.NewTransaction(nonce, c.ContractAddress, big.NewInt(0), gasLimit, gasPrice, input)
+
+    signedTx, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(43113)), privKey)
+    if err != nil {
+        return fmt.Errorf("failed to sign transaction: %v", err)
+    }
+
+    err = c.Client.SendTransaction(ctx, signedTx)
+    if err != nil {
+        return fmt.Errorf("failed to send transaction: %v", err)
+    }
+
+    receipt, err := bind.WaitMined(ctx, c.Client, signedTx)
+    if err != nil {
+        return fmt.Errorf("failed to wait for transaction to be mined: %v", err)
+    }
+
+    log.Printf("Transaction sent: %s", receipt.TxHash.Hex())
+
+    return nil
+}
+
 func (c *ContractInteractionInterface) Listen() error {
+    //listen to the smart contract for events
     return nil
 }
 
