@@ -3,8 +3,24 @@ package types
 
 import (
     "math/big"
+    "time"
+    "encoding/json"
+
 )
 
+
+type Contract struct {
+    ABI json.RawMessage `json:"abi"`
+}
+
+
+
+type Message struct {
+    Content string 
+    Time time.Time 
+    Owner string 
+    DataName string
+}
 
 type KeyReleased struct {
     PrivateKey []byte `abi:"privateKey"`
