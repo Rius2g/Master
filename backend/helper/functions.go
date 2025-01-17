@@ -9,9 +9,43 @@ import (
     "encoding/base64"
     "fmt"
     "log"
+    t "Master/types"
+
+
+    "encoding/json"
+    "os"
+    "strings"
+
+    "github.com/ethereum/go-ethereum/accounts/abi"
+
 )
 
 const ChunkSize = 100
+
+
+
+
+func LoadABI() (abi.ABI, error) {
+    filePath := "TwoPhaseCommit.json"
+    abiBytes, err := os.ReadFile(filePath)
+    if err != nil {
+        return abi.ABI{}, fmt.Errorf("failed to read ABI file: %v", err)
+    }
+
+    var contract t.Contract
+    err = json.Unmarshal(abiBytes, &contract)
+    if err != nil {
+        return abi.ABI{}, fmt.Errorf("failed to unmarshal contract JSON: %v", err)
+    }
+
+    parsedABI, err := abi.JSON(strings.NewReader(string(contract.ABI)))
+    if err != nil {
+        return abi.ABI{}, fmt.Errorf("failed to parse ABI JSON: %v", err)
+    }
+
+    return parsedABI, nil
+}
+
 
 
 func EncryptData(data string) ([]byte, []byte, error) {
