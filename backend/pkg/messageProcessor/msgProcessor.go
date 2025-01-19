@@ -5,8 +5,8 @@ import (
     "context"
     "fmt"
     "log"
-    c "Master/ContractInteractionInterface"
-    t "Master/types"
+    c "github.com/rius2g/Master/backend/pkg/ContractInteractionInterface"
+    t "github.com/rius2g/Master/backend/pkg/types"
 )
 
 type MessageProcessor struct {
