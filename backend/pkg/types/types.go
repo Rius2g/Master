@@ -22,11 +22,6 @@ type Message struct {
     DataName string
 }
 
-type KeyReleased struct {
-    PrivateKey []byte `abi:"privateKey"`
-    Owner string `abi:"owner"`
-    DataName string `abi:"dataName"`
-}
 
 type KeyReleaseRequested struct {
     Index *big.Int `abi:"index"`
@@ -49,13 +44,14 @@ type StoredData struct {
     ReleaseTime *big.Int `abi:"releaseTime"`
     KeyReleased bool `abi:"keyReleased"`
     ReleasePhase *big.Int `abi:"releasePhase"`
-    DataId *big.Int `abi:"dataId"`
+    DataId uint `abi:"dataId"`
 }
 
 type KeyReleasedEvent struct {
     PrivateKey []byte
     Owner string 
     DataName string 
+    DataId uint
 }
 
 type ReleaseEncryptedData struct {
@@ -63,6 +59,7 @@ type ReleaseEncryptedData struct {
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
     releaseTime *big.Int `abi:"releaseTime"`
+    DataId uint `abi:"dataId"`
 }
 
 
@@ -71,5 +68,6 @@ type KeyReleaseRequestedEvent struct {
     Index *big.Int `abi:"index"`
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
+    DataId uint `abi:"dataId"`
 }
 

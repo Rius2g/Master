@@ -1,4 +1,4 @@
-module Master
+module github.com/rius2g/Master/backend
 
 go 1.22.10
 

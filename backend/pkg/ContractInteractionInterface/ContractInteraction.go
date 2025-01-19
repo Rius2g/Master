@@ -6,8 +6,8 @@ import (
     "log"
     "strings"
     "time"
-    h "Master/helper"
-    t "Master/types"
+    h "github.com/rius2g/Master/backend/helper"
+    t "github.com/rius2g/Master/backend/pkg/types"
     "github.com/ethereum/go-ethereum/accounts/abi"
 
     "github.com/ethereum/go-ethereum/common"
@@ -36,8 +36,8 @@ type ContractInteractionInterface struct {
     Client          *ethclient.Client
     PrivateKey      string 
     dataIdCounter   uint
-    PrivateKeys     map[string][]byte 
-    EncryptedData   map[string][]byte
+    PrivateKeys     map[uint][]byte 
+    EncryptedData   map[uint][]byte
 }
 
 
@@ -61,8 +61,8 @@ func Init(contractAddress, PrivateKey string)(*ContractInteractionInterface, err
         Client:          client,
         PrivateKey:      PrivateKey,
         dataIdCounter:   0,
-        PrivateKeys:     make(map[string][]byte),
-        EncryptedData:   make(map[string][]byte),
+        PrivateKeys:     make(map[uint][]byte),
+        EncryptedData:   make(map[uint][]byte),
     }
 
     if err := continterface.RetriveCurrentDataID(); err != nil { //init to the current dataId
@@ -86,7 +86,7 @@ func (c *ContractInteractionInterface) Upload(data, owner, dataName string, rele
         return fmt.Errorf("failed to encrypt data: %v", err)
     }
 
-    c.PrivateKeys[dataName] = privateKeyBytes
+    c.PrivateKeys[c.dataIdCounter] = privateKeyBytes
     //hash := sha256.Sum256(encryptedData)
     
     privKey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
@@ -179,7 +179,7 @@ func (c *ContractInteractionInterface) RetrieveMissing() error {
     }
 
     for _, data := range returnVal {
-        c.EncryptedData[data.DataName] = data.EncryptedData
+        c.EncryptedData[data.DataId] = data.EncryptedData
     }
 
     return nil
@@ -220,7 +220,7 @@ func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) 
         return fmt.Errorf("invalid input data")
     }
 
-    if _, ok := c.PrivateKeys[dataName]; !ok {
+    if _, ok := c.PrivateKeys[c.dataIdCounter]; !ok {
         return fmt.Errorf("private key not found for data name: %s", dataName) 
     }
 
@@ -235,7 +235,7 @@ func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) 
         return fmt.Errorf("failed HexToECDSA: %v", err)
     }
 
-    input, err := c.ContractABI.Pack("releaseKey", c.PrivateKeys[dataName])
+    input, err := c.ContractABI.Pack("releaseKey", c.PrivateKeys[c.dataIdCounter], owner, dataName)
     if err != nil {
         return fmt.Errorf("failed to pack input data: %v", err)
     }
@@ -362,9 +362,15 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
             log.Printf("failed to unpack ReleaseEncryptedData event: %v", err)
             return
         }
+
+        if event.DataId > c.dataIdCounter+1 {
+            //missing entry, ask for them
+            c.RetrieveMissing()
+        }
+        //then we can keep processing the new one
         
         // Store the encrypted data for later decryption
-        c.EncryptedData[event.DataName] = event.EncryptedData
+        c.EncryptedData[event.DataId] = event.EncryptedData
         log.Printf("Stored encrypted data for: %s", event.DataName)
 
     case c.ContractABI.Events["KeyReleaseRequested"].ID.Hex():
@@ -381,7 +387,7 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
         }
 
     case c.ContractABI.Events["KeyReleased"].ID.Hex():
-        var event t.KeyReleased
+        var event t.KeyReleasedEvent
         if err := c.ContractABI.UnpackIntoInterface(&event, "KeyReleased", vLog.Data); err != nil {
             log.Printf("failed to unpack KeyReleased event: %v", err)
             return
@@ -390,10 +396,10 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
         log.Printf("Received private key for: %s", event.DataName)
         
         // Store the private key
-        c.PrivateKeys[event.DataName] = event.PrivateKey
+        c.PrivateKeys[event.DataId] = event.PrivateKey
 
         // Try to decrypt if we have the encrypted data
-        if encryptedData, exists := c.EncryptedData[event.DataName]; exists {
+        if encryptedData, exists := c.EncryptedData[event.DataId]; exists {
             data, err := h.DecryptData(encryptedData, event.PrivateKey)
             if err != nil {
                 log.Printf("failed to decrypt data: %v", err)
@@ -412,7 +418,7 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
             case messages <- msg:
                 log.Printf("Sent decrypted message for: %s", event.DataName)
                 // Clean up stored data after successful processing
-                delete(c.EncryptedData, event.DataName)
+                delete(c.EncryptedData, event.DataId)
             default:
                 log.Printf("Message channel full or closed, failed to send message for: %s", event.DataName)
             }
