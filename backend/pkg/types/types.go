@@ -10,6 +10,17 @@ import (
 )
 
 
+type EncryptedMessage struct {
+    EncryptedData []byte
+    Owner string
+    DataName string
+    ReleaseTime *big.Int
+    DataId uint
+    VectorClocks []VectorClock
+    Dependencies [][]byte
+}
+
+
 type Contract struct {
     ABI json.RawMessage `json:"abi"`
 }

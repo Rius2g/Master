@@ -10,7 +10,7 @@ import (
 
    "github.com/joho/godotenv"
     contract "github.com/rius2g/Master/backend/pkg/ContractInteractionInterface"
-    msgProcessor "github.com/rius2g/Master/backend/pkg/messageprocessor"
+    msgProcessor "github.com/rius2g/Master/backend/pkg/messageProcessor"
 )
 
 

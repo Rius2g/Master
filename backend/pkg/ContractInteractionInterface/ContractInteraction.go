@@ -104,9 +104,6 @@ func (c *ContractInteractionInterface) setSecurityLevel(securityLevel uint) erro
 }
 
 
-
-
-
 func (c *ContractInteractionInterface) Upload(data, owner, dataName string, releaseTime int64, dependencies [][]byte, securityLevel uint) error {
     if securityLevel > c.SecurityLevel {
         return fmt.Errorf("security level too high")
@@ -114,6 +111,40 @@ func (c *ContractInteractionInterface) Upload(data, owner, dataName string, rele
     if(len(data) == 0) || (len(owner) == 0) || (len(dataName) == 0) || (releaseTime < time.Now().Unix()) {
         return fmt.Errorf("invalid input data") 
     }
+
+    if len(dependencies) > 0 {
+        ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+        defer cancel()
+
+        input, err := c.ContractABI.Pack("getDependencyReleaseTimes", dependencies)
+        if err != nil {
+            return fmt.Errorf("failed to pack input data: %v", err)
+        }
+
+        result, err := c.Client.CallContract(ctx, ethereum.CallMsg{
+            To:   &c.ContractAddress,
+            Data: input,
+        }, nil) // nil for latest BlockNumber
+        if err != nil {
+            return fmt.Errorf("failed to call contract: %v", err)
+        }
+
+        var depReleaseTimes []*big.Int 
+        err = c.ContractABI.UnpackIntoInterface(&depReleaseTimes, "getDependencyReleaseTimes", result)
+        if err != nil {
+            return fmt.Errorf("failed to unpack return value: %v", err)
+        }
+
+        for i, depReleaseTime := range depReleaseTimes{
+            if depReleaseTime.Int64() == 0 {
+                return fmt.Errorf("dependency %d not found", i)
+            }
+            if depReleaseTime.Int64() > releaseTime {
+                return fmt.Errorf("Dependcy %d release time (%d) is after data release time (%d)", i, depReleaseTime.Int64(), releaseTime)
+            }
+        }
+    }
+
 
     encryptedData, privateKeyBytes, err := h.EncryptData(data) 
     if err != nil {
@@ -217,17 +248,18 @@ func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) 
 }
 
 
-func (c *ContractInteractionInterface) Listen(ctx context.Context) (<-chan t.Message, error) {
-    messages := make(chan t.Message)
+func (c *ContractInteractionInterface) Listen(ctx context.Context) (<-chan t.Message, <-chan t.EncryptedMessage, error) {
+    messages := make(chan t.Message, 50)
+    encryptedMessages := make(chan t.EncryptedMessage, 50)
     
     client, err := ethclient.Dial(NetworkEndpoint)
     if err != nil {
-        return nil, fmt.Errorf("failed to connect to the network: %v", err)
+        return nil, nil, fmt.Errorf("failed to connect to the network: %v", err)
     }
 
     currentBlock, err := client.BlockByNumber(ctx, nil)
     if err != nil {
-        return nil, fmt.Errorf("failed to retrieve current block: %v", err)
+        return nil, nil, fmt.Errorf("failed to retrieve current block: %v", err)
     }
 
     query := ethereum.FilterQuery{
@@ -238,7 +270,7 @@ func (c *ContractInteractionInterface) Listen(ctx context.Context) (<-chan t.Mes
     logs := make(chan types.Log)
     sub, err := client.SubscribeFilterLogs(ctx, query, logs)
     if err != nil {
-        return nil, fmt.Errorf("failed to subscribe to logs: %v", err)
+        return nil, nil, fmt.Errorf("failed to subscribe to logs: %v", err)
     }
 
     go func() {
@@ -265,7 +297,7 @@ func (c *ContractInteractionInterface) Listen(ctx context.Context) (<-chan t.Mes
                 }
 
             case vLog := <-logs:
-                handleEvent(c, vLog, messages)
+                handleEvent(c, vLog, messages, encryptedMessages)
 
             case <-ctx.Done():
                 return
@@ -273,10 +305,10 @@ func (c *ContractInteractionInterface) Listen(ctx context.Context) (<-chan t.Mes
         }
     }()
 
-    return messages, nil
+    return messages, encryptedMessages, nil
 }
 
-func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<- t.Message) {
+func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<- t.Message, encryptedMessages chan<- t.EncryptedMessage) {
     txHash := vLog.TxHash.Hex()
     receiveTime := time.Now()
     fmt.Printf("Received log: %s at %s\n", txHash, receiveTime)
@@ -308,6 +340,24 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
 
         c.EncryptedData[event.DataId] = event.EncryptedData
         log.Printf("Stored encrypted data for: %s", event.DataName)
+
+        encMsg := t.EncryptedMessage{
+            EncryptedData: event.EncryptedData,
+            Owner:        event.Owner,
+            DataName:     event.DataName,
+            ReleaseTime:  event.ReleaseTime,
+            DataId:       event.DataId,
+            VectorClocks: event.VectorClocks,
+            Dependencies: event.Dependencies,
+        }
+
+        select {
+        case encryptedMessages <- encMsg:
+            log.Printf("Sent encrypted message for: %s", event.DataName)
+        default:
+            log.Printf("Encrypted message channel full or closed, failed to send message for: %s", event.DataName)
+        }
+
 
     case c.ContractABI.Events["KeyReleaseRequested"].ID.Hex():
         var event t.KeyReleaseRequested
