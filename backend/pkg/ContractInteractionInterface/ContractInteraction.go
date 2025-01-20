@@ -29,7 +29,6 @@ var (
 )
 
 
-
 type ContractInteractionInterface struct {
     ContractAddress common.Address 
     ContractABI     abi.ABI
@@ -38,11 +37,15 @@ type ContractInteractionInterface struct {
     dataIdCounter   uint
     PrivateKeys     map[uint][]byte 
     EncryptedData   map[uint][]byte
+    SecurityLevel uint 
+    ProcessID common.Address
+    Dependencies map[uint]t.DependencyInfo
+    VectorClock map[string]*big.Int
 }
 
 
 
-func Init(contractAddress, PrivateKey string)(*ContractInteractionInterface, error) {
+func Init(contractAddress, PrivateKey string, SecurityLevel uint)(*ContractInteractionInterface, error) {
     //init etc etc, should also ask if they want to deploy own instance or use existing one  
     client, err := ethclient.Dial(NetworkEndpoint)
     if err != nil {
@@ -54,6 +57,13 @@ func Init(contractAddress, PrivateKey string)(*ContractInteractionInterface, err
         return nil, fmt.Errorf("failed to load contract ABI: %v", err)
     }
 
+    privKey, err := crypto.HexToECDSA(strings.TrimPrefix(PrivateKey, "0x"))
+    if err != nil {
+        return nil, fmt.Errorf("failed to parse private key: %v", err)
+    }
+
+    processAddress := crypto.PubkeyToAddress(privKey.PublicKey)
+
 
     continterface := ContractInteractionInterface{
         ContractAddress: common.HexToAddress(contractAddress),
@@ -63,6 +73,14 @@ func Init(contractAddress, PrivateKey string)(*ContractInteractionInterface, err
         dataIdCounter:   0,
         PrivateKeys:     make(map[uint][]byte),
         EncryptedData:   make(map[uint][]byte),
+        SecurityLevel: SecurityLevel,
+        ProcessID: processAddress,
+        Dependencies: make(map[uint]t.DependencyInfo),
+        VectorClock: make(map[string]*big.Int),
+    }
+
+    if err := continterface.setSecurityLevel(SecurityLevel); err != nil {
+        return nil, fmt.Errorf("failed to set security level: %v", err)
     }
 
     if err := continterface.RetriveCurrentDataID(); err != nil { //init to the current dataId
@@ -73,10 +91,26 @@ func Init(contractAddress, PrivateKey string)(*ContractInteractionInterface, err
 }
 
 
+func (c *ContractInteractionInterface) setSecurityLevel(securityLevel uint) error {
+    input, err := c.ContractABI.Pack("setProcessSecurityLevel", c.ProcessID, big.NewInt(int64(securityLevel)))
+    if err != nil {
+        return fmt.Errorf("failed to pack input data: %v", err)
+    }
+
+    if err := c.executeTransaction(input); err != nil {
+        return fmt.Errorf("failed to execute transaction: %v", err)
+    }
+    return nil
+}
 
 
 
-func (c *ContractInteractionInterface) Upload(data, owner, dataName string, releaseTime int64) error {
+
+
+func (c *ContractInteractionInterface) Upload(data, owner, dataName string, releaseTime int64, dependencies [][]byte, securityLevel uint) error {
+    if securityLevel > c.SecurityLevel {
+        return fmt.Errorf("security level too high")
+    }
     if(len(data) == 0) || (len(owner) == 0) || (len(dataName) == 0) || (releaseTime < time.Now().Unix()) {
         return fmt.Errorf("invalid input data") 
     }
@@ -89,67 +123,14 @@ func (c *ContractInteractionInterface) Upload(data, owner, dataName string, rele
     c.PrivateKeys[c.dataIdCounter] = privateKeyBytes
     //hash := sha256.Sum256(encryptedData)
     
-    privKey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
-    if err != nil {
-        return fmt.Errorf("failed to parse private key: %v", err)
-    }
-
-    auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(43113))
-    if err != nil {
-        return fmt.Errorf("failed HexToECDSA: %v", err)
-    }
-
-    input, err := c.ContractABI.Pack("pushEncryptedData", encryptedData, owner, dataName, big.NewInt(releaseTime))
+    input, err := c.ContractABI.Pack("addStoredData", encryptedData, owner, dataName, big.NewInt(releaseTime), dependencies, big.NewInt(int64(securityLevel)))
     if err != nil {
         return fmt.Errorf("failed to pack input data: %v", err)
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-    defer cancel()
-
-    gasPrice, err := c.Client.SuggestGasPrice(ctx)
-    if err != nil {
-        return fmt.Errorf("failed to suggest gas price: %v", err) 
+    if err := c.executeTransaction(input); err != nil {
+        return fmt.Errorf("failed to execute transaction: %v", err) 
     }
-     
-    gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
-        From: auth.From,
-        To:   &c.ContractAddress,
-        Gas:  0,
-        GasPrice: gasPrice,
-        Value: big.NewInt(0),
-        Data: input,
-    })
-    if err != nil {
-        return fmt.Errorf("failed to estimate gas: %v", err)
-    }
-
-    gasLimit = uint64(float64(gasLimit) * 1.2)
-
-    nonce, err := c.Client.PendingNonceAt(ctx, auth.From)
-    if err != nil {
-        return fmt.Errorf("failed to retrieve nonce: %v", err)
-    }
-
-    tx := types.NewTransaction(nonce, c.ContractAddress, big.NewInt(0), gasLimit, gasPrice, input)
-
-    signedTx, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(43113)), privKey)
-    if err != nil {
-        return fmt.Errorf("failed to sign transaction: %v", err)
-    }
-
-
-    err = c.Client.SendTransaction(ctx, signedTx)
-    if err != nil {
-        return fmt.Errorf("failed to send transaction: %v", err)
-    }
-
-    receipt, err := bind.WaitMined(ctx, c.Client, signedTx)
-    if err != nil {
-        return fmt.Errorf("failed to wait for transaction to be mined: %v", err)
-    }
-
-    log.Printf("Transaction sent: %s", receipt.TxHash.Hex())
 
     return nil
 }
@@ -224,69 +205,14 @@ func (c *ContractInteractionInterface) SubmitPrivateKey(dataName, owner string) 
         return fmt.Errorf("private key not found for data name: %s", dataName) 
     }
 
-
-    privKey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
-    if err != nil {
-        return fmt.Errorf("failed to parse private key: %v", err)
-    }
-
-    auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(43113))
-    if err != nil {
-        return fmt.Errorf("failed HexToECDSA: %v", err)
-    }
-
     input, err := c.ContractABI.Pack("releaseKey", c.PrivateKeys[c.dataIdCounter], owner, dataName)
     if err != nil {
         return fmt.Errorf("failed to pack input data: %v", err)
     }
 
-    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-    defer cancel()
-
-    gasPrice, err := c.Client.SuggestGasPrice(ctx)
-    if err != nil {
-        return fmt.Errorf("failed to suggest gas price: %v", err)
+    if err := c.executeTransaction(input); err != nil {
+        return fmt.Errorf("failed to execute transaction: %v", err)
     }
-
-    gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
-        From: auth.From,
-        To:   &c.ContractAddress,
-        Gas:  0,
-        GasPrice: gasPrice,
-        Value: big.NewInt(0),
-        Data: input,
-    })
-
-    if err != nil {
-        return fmt.Errorf("failed to estimate gas: %v", err)
-    }
-
-    gasLimit = uint64(float64(gasLimit) * 1.2)
-        
-    nonce, err := c.Client.PendingNonceAt(ctx, auth.From)
-    if err != nil {
-        return fmt.Errorf("failed to retrieve nonce: %v", err)
-    }
-
-    tx := types.NewTransaction(nonce, c.ContractAddress, big.NewInt(0), gasLimit, gasPrice, input)
-
-    signedTx, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(43113)), privKey)
-    if err != nil {
-        return fmt.Errorf("failed to sign transaction: %v", err)
-    }
-
-    err = c.Client.SendTransaction(ctx, signedTx)
-    if err != nil {
-        return fmt.Errorf("failed to send transaction: %v", err)
-    }
-
-    receipt, err := bind.WaitMined(ctx, c.Client, signedTx)
-    if err != nil {
-        return fmt.Errorf("failed to wait for transaction to be mined: %v", err)
-    }
-
-    log.Printf("Transaction sent: %s", receipt.TxHash.Hex())
-
     return nil
 }
 
@@ -367,9 +293,19 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
             //missing entry, ask for them
             c.RetrieveMissing()
         }
-        //then we can keep processing the new one
-        
-        // Store the encrypted data for later decryption
+
+        c.Dependencies[event.DataId] = t.DependencyInfo{ 
+            VectorClocks: event.VectorClocks,
+            Dependencies: event.Dependencies,
+        }
+
+        for _, vc := range event.VectorClocks {
+            processStr := vc.Process.String()
+            if current, exists := c.VectorClock[processStr]; !exists || current.Cmp(vc.TimeStamp) < 0 {
+                c.VectorClock[processStr] = vc.TimeStamp
+            }
+        }
+
         c.EncryptedData[event.DataId] = event.EncryptedData
         log.Printf("Stored encrypted data for: %s", event.DataName)
 
@@ -405,6 +341,16 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
                 log.Printf("failed to decrypt data: %v", err)
                 return
             }
+    
+        depInfo, exists := c.Dependencies[event.DataId]
+        var vectorClocks []t.VectorClock
+        var dependencies [][]byte 
+        if exists {
+            vectorClocks = depInfo.VectorClocks
+            dependencies = depInfo.Dependencies 
+        }
+        
+
 
             // Send decrypted message through channel
             msg := t.Message{
@@ -412,6 +358,8 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
                 Time:    time.Now(),
                 Owner:   event.Owner,
                 DataName: event.DataName,
+                VectorClocks: vectorClocks,
+                Dependencies: dependencies,
             }
 
             select {
@@ -428,4 +376,66 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
         log.Printf("unknown event: %s", vLog.Topics[0].Hex())
     }
 }
+
+
+func (c *ContractInteractionInterface) executeTransaction(input []byte) error {
+    privkey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
+    if err != nil {
+        return fmt.Errorf("failed to parse private key: %v", err)
+    }
+
+    auth, err := bind.NewKeyedTransactorWithChainID(privkey, big.NewInt(43113))
+    if err != nil {
+        return fmt.Errorf("failed HexToECDSA: %v", err)
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    defer cancel()
+
+    gasPrice, err := c.Client.SuggestGasPrice(ctx)
+    if err != nil {
+        return fmt.Errorf("failed to suggest gas price: %v", err)
+    }
+
+    gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
+        From: auth.From,
+        To:   &c.ContractAddress,
+        Gas:  0,
+        GasPrice: gasPrice,
+        Value: big.NewInt(0),
+        Data: input,
+    })
+
+    if err != nil {
+        return fmt.Errorf("failed to estimate gas: %v", err)
+    }
+
+    gasLimit = uint64(float64(gasLimit) * 1.2)
+
+    nonce, err := c.Client.PendingNonceAt(ctx, auth.From)
+    if err != nil {
+        return fmt.Errorf("failed to retrieve nonce: %v", err)
+    }
+
+    tx := types.NewTransaction(nonce, c.ContractAddress, big.NewInt(0), gasLimit, gasPrice, input)
+
+    signedTx, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(43113)), privkey)
+    if err != nil {
+        return fmt.Errorf("failed to sign transaction: %v", err)
+    }
+
+    err = c.Client.SendTransaction(ctx, signedTx)
+    if err != nil {
+        return fmt.Errorf("failed to send transaction: %v", err)
+    }
+
+    receipt, err := bind.WaitMined(ctx, c.Client, signedTx)
+    if err != nil {
+        return fmt.Errorf("failed to wait for transaction to be mined: %v", err)
+    }
+
+    log.Printf("Transaction sent: %s", receipt.TxHash.Hex())
+    return nil
+}
+
 

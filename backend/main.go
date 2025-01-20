@@ -25,7 +25,9 @@ func main() {
     contractAddress := os.Getenv("CONTRACT_ADDRESS") 
     privateKey := os.Getenv("PRIVATE_KEY")
 
-    c, err := contract.Init(contractAddress, privateKey)
+    securityLevel := uint(1)
+
+    c, err := contract.Init(contractAddress, privateKey, securityLevel)
     if err != nil {
         log.Fatalf("failed to initialize contract: %v", err)
     }

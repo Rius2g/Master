@@ -5,6 +5,7 @@ import (
     "math/big"
     "time"
     "encoding/json"
+    "github.com/ethereum/go-ethereum/common"
 
 )
 
@@ -14,12 +15,20 @@ type Contract struct {
 }
 
 
+type VectorClock struct {
+    Process common.Address `abi:"process"`
+    TimeStamp *big.Int `abi:"timeStamp"`
+}
+
+
 
 type Message struct {
     Content string 
     Time time.Time 
     Owner string 
     DataName string
+    VectorClocks []VectorClock 
+    Dependencies [][]byte
 }
 
 
@@ -45,7 +54,18 @@ type StoredData struct {
     KeyReleased bool `abi:"keyReleased"`
     ReleasePhase *big.Int `abi:"releasePhase"`
     DataId uint `abi:"dataId"`
+    VectorClocks []VectorClock `abi:"vectorClocks"`
+    Dependencies [][]byte `abi:"dependencies"`
+    SecurityLevel *big.Int `abi:"securityLevel"`
 }
+
+
+type DependencyInfo struct {
+    VectorClocks []VectorClock
+    Dependencies [][]byte
+}
+
+
 
 type KeyReleasedEvent struct {
     PrivateKey []byte
@@ -58,8 +78,10 @@ type ReleaseEncryptedData struct {
     EncryptedData []byte `abi:"encryptedData"`
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
-    releaseTime *big.Int `abi:"releaseTime"`
+    ReleaseTime *big.Int `abi:"releaseTime"`
     DataId uint `abi:"dataId"`
+    Dependencies [][]byte `abi:"dependencies"`
+    VectorClocks []VectorClock `abi:"vectorClocks"`
 }
 
 
