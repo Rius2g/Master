@@ -9,7 +9,7 @@ import (
     "encoding/base64"
     "fmt"
     "log"
-    t "Master/types"
+    t "github.com/rius2g/Master/backend/pkg/types"
 
 
     "encoding/json"
@@ -21,6 +21,7 @@ import (
 )
 
 const ChunkSize = 100
+
 
 
 
