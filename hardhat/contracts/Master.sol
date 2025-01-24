@@ -18,6 +18,7 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
         uint256 releaseTime;
         bool keyReleased;
         int releasePhase;
+        bytes privateKey;
         uint256 dataId;
         VectorClock[] vectorClocks;
         bytes32[] dependencies;
@@ -41,6 +42,7 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
     
     event ReleaseEncryptedData(
         bytes encryptedData,
+        bytes privateKey,
         string owner,
         string dataName,
         uint256 releaseTime,
@@ -84,9 +86,25 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
         return missingData;
     }
 
+    function getDependencyReleaseTimes(bytes32[] memory dependencies) public view returns (uint256[] memory){
+        uint256[] memory releaseTimes = new uint256[](dependencies.length);
+
+        for (uint i = 0; i < dependencies.length; i++){
+            releaseTimes[i] = 0;
+            for (uint j = 0; j < storedData.length; j++){
+                if (keccak256(abi.encodePacked(storedData[j].encryptedData)) == dependencies[i]){
+                    releaseTimes[i] = storedData[j].releaseTime;
+                    break;
+                }
+            }
+        }
+        return releaseTimes;
+    } 
+
 
     function addStoredData(
         bytes memory _encryptedData,
+        bytes memory _privateKey,
         string memory _owner,
         string memory _dataName,
         uint256 _releaseTime,
@@ -98,10 +116,23 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
         ValidSecurityLevel(_securityLevel)
     {  
         require(processSecurityLevel[msg.sender] >= _securityLevel, "Process security level is too low");
+
+        for (uint i = 0; i < _dependencies.length; i++) {
+            bool found = false; 
+            for (uint j = 0; j < storedData.length; j++){
+                if (keccak256(abi.encodePacked(storedData[j].encryptedData)) == _dependencies[i]){
+                    require(storedData[j].releaseTime <= _releaseTime, "Release time must be after all dependencies");
+                    found = true;
+                    break;
+                }
+            }
+            require(found, "Dependency not found");
+        }
         dataCounter++; //increment data counter for each new data added
 
         StoredData storage newData = storedData.push();
         newData.encryptedData = _encryptedData;
+        newData.privateKey = _privateKey;
         newData.owner = _owner;
         newData.dataName = _dataName;
         newData.releaseTime = _releaseTime;
@@ -120,6 +151,7 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
         //send out the encrypted data immediately 
         emit ReleaseEncryptedData(
             _encryptedData, 
+            _privateKey,
             _owner, 
             _dataName, 
             _releaseTime, 
