@@ -29,6 +29,12 @@ var (
 )
 
 
+type encryptedData struct {
+    EncryptedData []byte
+    EncryptedEASKey []byte
+}
+
+
 type ContractInteractionInterface struct {
     ContractAddress common.Address 
     ContractABI     abi.ABI
@@ -36,7 +42,7 @@ type ContractInteractionInterface struct {
     PrivateKey      string 
     dataIdCounter   uint
     PrivateKeys     map[uint][]byte 
-    EncryptedData   map[uint][]byte
+    EncryptedData   map[uint]encryptedData
     SecurityLevel uint 
     ProcessID common.Address
     Dependencies map[uint]t.DependencyInfo
@@ -72,7 +78,7 @@ func Init(contractAddress, PrivateKey string, SecurityLevel uint)(*ContractInter
         PrivateKey:      PrivateKey,
         dataIdCounter:   0,
         PrivateKeys:     make(map[uint][]byte),
-        EncryptedData:   make(map[uint][]byte),
+        EncryptedData:   make(map[uint]encryptedData),
         SecurityLevel: SecurityLevel,
         ProcessID: processAddress,
         Dependencies: make(map[uint]t.DependencyInfo),
@@ -103,15 +109,15 @@ func (c *ContractInteractionInterface) setSecurityLevel(securityLevel uint) erro
     return nil
 }
 
-
 func (c *ContractInteractionInterface) Upload(data, owner, dataName string, releaseTime int64, dependencies [][]byte, securityLevel uint) error {
     if securityLevel > c.SecurityLevel {
         return fmt.Errorf("security level too high")
     }
-    if(len(data) == 0) || (len(owner) == 0) || (len(dataName) == 0) || (releaseTime < time.Now().Unix()) {
-        return fmt.Errorf("invalid input data") 
+    if len(data) == 0 || len(owner) == 0 || len(dataName) == 0 || releaseTime < time.Now().Unix() {
+        return fmt.Errorf("invalid input data")
     }
 
+    // Validate dependencies
     if len(dependencies) > 0 {
         ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
         defer cancel()
@@ -124,47 +130,60 @@ func (c *ContractInteractionInterface) Upload(data, owner, dataName string, rele
         result, err := c.Client.CallContract(ctx, ethereum.CallMsg{
             To:   &c.ContractAddress,
             Data: input,
-        }, nil) // nil for latest BlockNumber
+        }, nil)
         if err != nil {
             return fmt.Errorf("failed to call contract: %v", err)
         }
 
-        var depReleaseTimes []*big.Int 
+        var depReleaseTimes []*big.Int
         err = c.ContractABI.UnpackIntoInterface(&depReleaseTimes, "getDependencyReleaseTimes", result)
         if err != nil {
             return fmt.Errorf("failed to unpack return value: %v", err)
         }
 
-        for i, depReleaseTime := range depReleaseTimes{
+        for i, depReleaseTime := range depReleaseTimes {
             if depReleaseTime.Int64() == 0 {
                 return fmt.Errorf("dependency %d not found", i)
             }
             if depReleaseTime.Int64() > releaseTime {
-                return fmt.Errorf("Dependcy %d release time (%d) is after data release time (%d)", i, depReleaseTime.Int64(), releaseTime)
+                return fmt.Errorf("dependency %d release time (%d) is after data release time (%d)", i, depReleaseTime.Int64(), releaseTime)
             }
         }
     }
 
-
-    encryptedData, privateKeyBytes, err := h.EncryptData(data) 
+    // Encrypt the data and EAS key
+    encryptedData, encryptedEASKey, privateKeyBytes, err := h.EncryptData(data)
     if err != nil {
         return fmt.Errorf("failed to encrypt data: %v", err)
     }
 
+    // Store the RSA private key for later decryption
     c.PrivateKeys[c.dataIdCounter] = privateKeyBytes
-    //hash := sha256.Sum256(encryptedData)
-    
-    input, err := c.ContractABI.Pack("addStoredData", encryptedData, owner, dataName, big.NewInt(releaseTime), dependencies, big.NewInt(int64(securityLevel)))
+
+    // Pack the inputs to include encrypted data, encrypted EAS key, and other metadata
+    input, err := c.ContractABI.Pack(
+        "addStoredData",
+        encryptedData,
+        encryptedEASKey,
+        owner,
+        dataName,
+        big.NewInt(releaseTime),
+        dependencies,
+        big.NewInt(int64(securityLevel)),
+    )
     if err != nil {
         return fmt.Errorf("failed to pack input data: %v", err)
     }
 
     if err := c.executeTransaction(input); err != nil {
-        return fmt.Errorf("failed to execute transaction: %v", err) 
+        return fmt.Errorf("failed to execute transaction: %v", err)
     }
 
+    log.Printf("Data uploaded successfully: %s", dataName)
     return nil
 }
+
+
 
 func (c *ContractInteractionInterface) RetrieveMissing() error {
     //this should ping the getMissingDataItems function in the contract and return the data that is missing
@@ -191,7 +210,11 @@ func (c *ContractInteractionInterface) RetrieveMissing() error {
     }
 
     for _, data := range returnVal {
-        c.EncryptedData[data.DataId] = data.EncryptedData
+        storedData := encryptedData{
+            EncryptedData: data.EncryptedData,
+            EncryptedEASKey: data.PrivateKey, 
+        }
+        c.EncryptedData[data.DataId] = storedData 
     }
 
     return nil
@@ -338,7 +361,12 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
             }
         }
 
-        c.EncryptedData[event.DataId] = event.EncryptedData
+        dataStore := encryptedData{
+            EncryptedData: event.EncryptedData,
+            EncryptedEASKey: event.PrivateKey,
+        }
+
+        c.EncryptedData[event.DataId] = dataStore
         log.Printf("Stored encrypted data for: %s", event.DataName)
 
         encMsg := t.EncryptedMessage{
@@ -386,7 +414,7 @@ func handleEvent(c *ContractInteractionInterface, vLog types.Log, messages chan<
 
         // Try to decrypt if we have the encrypted data
         if encryptedData, exists := c.EncryptedData[event.DataId]; exists {
-            data, err := h.DecryptData(encryptedData, event.PrivateKey)
+            data, err := h.DecryptData(encryptedData.EncryptedData, encryptedData.EncryptedEASKey, event.PrivateKey)
             if err != nil {
                 log.Printf("failed to decrypt data: %v", err)
                 return

@@ -4,9 +4,11 @@ import (
     "bytes"
     "crypto/rand"
     "crypto/rsa"
+    "crypto/aes"
+    "crypto/cipher"
     "crypto/sha256"
     "crypto/x509"
-    "encoding/base64"
+
     "fmt"
     "log"
     t "github.com/rius2g/Master/backend/pkg/types"
@@ -19,11 +21,6 @@ import (
     "github.com/ethereum/go-ethereum/accounts/abi"
 
 )
-
-const ChunkSize = 100
-
-
-
 
 
 func LoadABI() (abi.ABI, error) {
@@ -48,120 +45,102 @@ func LoadABI() (abi.ABI, error) {
 }
 
 
-
-func EncryptData(data string) ([]byte, []byte, error) {
+func EncryptData(data string) ([]byte, []byte, []byte, error) {
     log.Printf("Starting encryption of data with length: %d", len(data))
 
-    // Generate key pair
+    // Step 1: Generate the EAS key
+    easKey := make([]byte, 32) // 256-bit key for AES
+    _, err := rand.Read(easKey)
+    if err != nil {
+        return nil, nil, nil, fmt.Errorf("failed to generate EAS key: %v", err)
+    }
+    log.Printf("Generated EAS key of 256 bits")
+
+    // Step 2: Encrypt the data with the EAS key (using AES-GCM)
+    aesBlock, err := aes.NewCipher(easKey)
+    if err != nil {
+        return nil, nil, nil, fmt.Errorf("failed to create AES cipher: %v", err)
+    }
+    aesGCM, err := cipher.NewGCM(aesBlock)
+    if err != nil {
+        return nil, nil, nil, fmt.Errorf("failed to create GCM block cipher: %v", err)
+    }
+
+    nonce := make([]byte, aesGCM.NonceSize())
+    _, err = rand.Read(nonce)
+    if err != nil {
+        return nil, nil, nil, fmt.Errorf("failed to generate nonce: %v", err)
+    }
+
+    encryptedData := aesGCM.Seal(nil, nonce, []byte(data), nil)
+    log.Printf("Data encrypted using AES-GCM")
+
+    // Step 3: Generate an RSA key pair
     privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
     if err != nil {
-        return nil, nil, fmt.Errorf("failed to generate private key: %v", err)
+        return nil, nil, nil, fmt.Errorf("failed to generate RSA key pair: %v", err)
     }
-    log.Printf("Generated 2048-bit RSA key pair")
+    log.Printf("Generated RSA key pair")
 
-    // Convert data to bytes
-    dataBytes := []byte(data)
-    
-    // Calculate number of chunks
-    numChunks := (len(dataBytes) + ChunkSize - 1) / ChunkSize
-    log.Printf("Will split data into %d chunks of maximum %d bytes each", numChunks, ChunkSize)
-    
-    // Create slice to hold all encrypted chunks
-    var encryptedChunks [][]byte
-    
-    // Encrypt each chunk
-    for i := 0; i < numChunks; i++ {
-        start := i * ChunkSize
-        end := start + ChunkSize
-        if end > len(dataBytes) {
-            end = len(dataBytes)
-        }
-        
-        chunk := dataBytes[start:end]
-        log.Printf("Processing chunk %d/%d - Size: %d bytes", i+1, numChunks, len(chunk))
-        
-        // Encrypt chunk
-        encryptedChunk, err := rsa.EncryptPKCS1v15(
-            rand.Reader,
-            &privateKey.PublicKey,
-            chunk,
-        )
-        if err != nil {
-            log.Printf("Failed to encrypt chunk %d: %v", i+1, err)
-            log.Printf("Chunk size: %d, Key size: %d bits", len(chunk), privateKey.Size()*8)
-            return nil, nil, fmt.Errorf("failed to encrypt chunk %d (%d bytes): %v", i+1, len(chunk), err)
-        }
-        
-        encryptedChunks = append(encryptedChunks, encryptedChunk)
-        log.Printf("Chunk %d encrypted successfully", i+1)
+    // Step 4: Encrypt the EAS key using the RSA public key
+    encryptedEASKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &privateKey.PublicKey, easKey, nil)
+    if err != nil {
+        return nil, nil, nil, fmt.Errorf("failed to encrypt EAS key: %v", err)
     }
-    
-    // Combine chunks with base64 encoding to ensure safe delimiter handling
-    var encodedChunks [][]byte
-    for i, chunk := range encryptedChunks {
-        encoded := make([]byte, base64.StdEncoding.EncodedLen(len(chunk)))
-        base64.StdEncoding.Encode(encoded, chunk)
-        encodedChunks = append(encodedChunks, encoded)
-        log.Printf("Chunk %d base64 encoded, size: %d", i+1, len(encoded))
-    }
-    
-    // Join with delimiter
-    combinedData := bytes.Join(encodedChunks, []byte("||"))
-    log.Printf("All chunks combined, final size: %d bytes", len(combinedData))
-    
-    // Convert private key to bytes
+    log.Printf("EAS key encrypted using RSA public key")
+
+    // Convert private key to bytes for storage
     privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
-    log.Printf("Private key marshaled, size: %d bytes", len(privateKeyBytes))
-    
-    return combinedData, privateKeyBytes, nil
+    log.Printf("Private key marshaled to bytes")
+
+    // Return encrypted data, encrypted EAS key, and private key
+    return append(nonce, encryptedData...), encryptedEASKey, privateKeyBytes, nil
 }
 
-func DecryptData(encryptedData []byte, privateKeyBytes []byte) (string, error) {
-    log.Printf("Starting decryption of data with length: %d", len(encryptedData))
-    
-    // Parse private key
+
+func DecryptData(encryptedData []byte, encryptedEASKey []byte, privateKeyBytes []byte) (string, error) {
+    log.Printf("Starting decryption")
+
+    // Parse the private key
     privateKey, err := x509.ParsePKCS1PrivateKey(privateKeyBytes)
     if err != nil {
         return "", fmt.Errorf("failed to parse private key: %v", err)
     }
     log.Printf("Private key parsed successfully")
-    
-    // Split combined data into chunks
-    encodedChunks := bytes.Split(encryptedData, []byte("||"))
-    log.Printf("Split into %d encoded chunks", len(encodedChunks))
-    
-    // Decrypt each chunk
-    var decryptedChunks [][]byte
-    
-    for i, encodedChunk := range encodedChunks {
-        // Decode base64
-        decodedLen := base64.StdEncoding.DecodedLen(len(encodedChunk))
-        decoded := make([]byte, decodedLen)
-        n, err := base64.StdEncoding.Decode(decoded, encodedChunk)
-        if err != nil {
-            return "", fmt.Errorf("failed to decode chunk %d: %v", i+1, err)
-        }
-        decoded = decoded[:n]
-        
-        log.Printf("Decrypting chunk %d, size after base64 decode: %d", i+1, len(decoded))
-        decryptedChunk, err := rsa.DecryptPKCS1v15(
-            rand.Reader,
-            privateKey,
-            decoded,
-        )
-        if err != nil {
-            return "", fmt.Errorf("failed to decrypt chunk %d: %v", i+1, err)
-        }
-        decryptedChunks = append(decryptedChunks, decryptedChunk)
-        log.Printf("Chunk %d decrypted successfully", i+1)
+
+    // Decrypt the EAS key
+    easKey, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, encryptedEASKey, nil)
+    if err != nil {
+        return "", fmt.Errorf("failed to decrypt EAS key: %v", err)
     }
-    
-    // Combine decrypted chunks
-    decryptedData := bytes.Join(decryptedChunks, nil)
-    log.Printf("All chunks decrypted and combined, final size: %d bytes", len(decryptedData))
-    
+    log.Printf("EAS key decrypted successfully")
+
+    // Separate nonce and encrypted data
+    nonceSize := 12 // Standard nonce size for AES-GCM
+    nonce := encryptedData[:nonceSize]
+    ciphertext := encryptedData[nonceSize:]
+
+    // Decrypt the data using AES-GCM
+    aesBlock, err := aes.NewCipher(easKey)
+    if err != nil {
+        return "", fmt.Errorf("failed to create AES cipher: %v", err)
+    }
+    aesGCM, err := cipher.NewGCM(aesBlock)
+    if err != nil {
+        return "", fmt.Errorf("failed to create GCM block cipher: %v", err)
+    }
+
+    decryptedData, err := aesGCM.Open(nil, nonce, ciphertext, nil)
+    if err != nil {
+        return "", fmt.Errorf("failed to decrypt data: %v", err)
+    }
+    log.Printf("Data decrypted successfully")
+
     return string(decryptedData), nil
 }
+
+
+
 
 func ValidateHash(decryptedData string, originalHash []byte) bool {
     hash := sha256.Sum256([]byte(decryptedData))
