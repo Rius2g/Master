@@ -59,6 +59,7 @@ type PushEncryptedDataEvent struct {
 
 type StoredData struct {
     EncryptedData []byte `abi:"encryptedData"`
+    PrivateKey []byte `abi:"privateKey"`
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
     ReleaseTime *big.Int `abi:"releaseTime"`
@@ -87,6 +88,7 @@ type KeyReleasedEvent struct {
 
 type ReleaseEncryptedData struct {
     EncryptedData []byte `abi:"encryptedData"`
+    PrivateKey []byte `abi:"privateKey"`
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
     ReleaseTime *big.Int `abi:"releaseTime"`
