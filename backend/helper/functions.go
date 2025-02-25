@@ -24,7 +24,7 @@ import (
 
 
 func LoadABI() (abi.ABI, error) {
-    filePath := "TwoPhaseCommit.json"
+    filePath := "TwoPhaseDissemination.json"
     abiBytes, err := os.ReadFile(filePath)
     if err != nil {
         return abi.ABI{}, fmt.Errorf("failed to read ABI file: %v", err)
