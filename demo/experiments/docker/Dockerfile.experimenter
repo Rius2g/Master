@@ -1,6 +1,25 @@
+# Use a lightweight Go image
 FROM golang:1.21-alpine
+
+# Set working directory inside the container
 WORKDIR /app
+
+# Copy go.mod and go.sum for dependency caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the entire project
 COPY . .
+
+# Build the experimenter CLI binary
 RUN go build -o experimenter ./cmd/experimenter
+
+# Environment variables will be injected at runtime
+ENV NODE_ID=""
+ENV REGION=""
+ENV EXPERIMENT_ID=""
+ENV COLLECTOR_URL="http://collector-node:8080"
+
+# Default CMD to launch experiment
 CMD ["./experimenter"]
 
