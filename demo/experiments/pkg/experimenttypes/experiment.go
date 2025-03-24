@@ -15,17 +15,19 @@ const (
 )
 
 type ExperimentConfig struct {
-    ExperimentID    ExperimentID `json:"experiment_id"`
-    NodeID          string       `json:"node_id"`
-    Region          string       `json:"region"`
-    NumNodes        int          `json:"num_nodes"`
-    EpochDurationMs int          `json:"epoch_duration_ms"`
-    MessageRate     int          `json:"message_rate"` // messages per second
-    TestDuration    time.Duration `json:"test_duration"` // how long to run the test
-    EnableOrdering  bool         `json:"enable_ordering"`
-    Byzantine       bool         `json:"byzantine"` // should this node behave incorrectly
-    UploadNode      bool         `json:"upload_node"` // if this node uploads new causal chains
+    NodeID            string        `json:"node_id"`
+    Region            string        `json:"region"`
+    ExperimentID      ExperimentID  `json:"experiment_id"`
+    TestDuration      time.Duration `json:"test_duration"`
+    MessageRate       int           `json:"message_rate"`
+    Byzantine         bool          `json:"byzantine"`
+    SecurityLevel     int           `json:"security_level"`
+    NumNodes          int           `json:"num_nodes"`
+    EpochDurationMs   int           `json:"epoch_duration_ms"`
+    EnableOrdering    bool          `json:"enable_ordering"`
+    UploadNode        bool `json:"upload_node"`
 }
+
 
 type ExperimentResult struct {
     NodeID         string             `json:"node_id"`

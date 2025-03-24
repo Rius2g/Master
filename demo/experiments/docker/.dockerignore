@@ -1,0 +1,42 @@
+# Ignore version control
+.git
+.gitignore
+
+# Ignore editor/IDE config
+.vscode
+.idea
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore local environment files
+.env
+.env.*
+
+# Ignore build artifacts
+bin/
+build/
+dist/
+
+# Ignore Docker cache if any
+**/node_modules
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Ignore experiments-related binaries/output
+*.out
+*.log
+
+# Ignore experiment-specific folders
+docker-compose.override.yml
+tmp/
+test-results/
+coverage/
+# Ignore Go build artifacts
+**/vendor/
+**/pkg/
+**/cmd/**/bin/
+
