@@ -3,6 +3,9 @@ dotenv.config();
 
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-ethers";
+// hardhat.config.ts
+import "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 const config: HardhatUserConfig = {
   solidity: {

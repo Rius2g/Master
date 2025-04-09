@@ -1,108 +1,52 @@
-package types 
-
+// Updated types.go
+package types
 
 import (
     "math/big"
-    "time"
     "encoding/json"
+    "time"
     "github.com/ethereum/go-ethereum/common"
-
 )
 
-
-type EncryptedMessage struct {
-    EncryptedData []byte
-    Owner string
-    DataName string
-    ReleaseTime *big.Int
-    DataId uint
-    VectorClocks []VectorClock
-    Dependencies [][]byte
+type StoredData struct {
+    Data []byte `abi:"data"`
+    Owner string `abi:"owner"`
+    DataName string `abi:"dataName"`
+    MessageTimestamp *big.Int `abi:"messageTimestamp"`
+    DataId uint `abi:"dataId"`
+    VectorClocks []VectorClock `abi:"vectorClocks"`
+    Dependencies [][]byte `abi:"dependencies"`
 }
-
 
 type Contract struct {
     ABI json.RawMessage `json:"abi"`
 }
-
 
 type VectorClock struct {
     Process common.Address `abi:"process"`
     TimeStamp *big.Int `abi:"timeStamp"`
 }
 
-
-
 type Message struct {
     Content string 
-    Time time.Time 
+    Time time.Time
     Owner string 
     DataName string
     VectorClocks []VectorClock 
     Dependencies [][]byte
 }
 
-
-type KeyReleaseRequested struct {
-    Index *big.Int `abi:"index"`
-    Owner string `abi:"owner"`
-    DataName string `abi:"dataName"`
-}
-
-
-type PushEncryptedDataEvent struct {
-    EncryptedData []byte
-    Owner string
-    DataName string
-    ReleaseTime *big.Int
-}
-
-type StoredData struct {
-    EncryptedData []byte `abi:"encryptedData"`
-    PrivateKey []byte `abi:"privateKey"`
-    Owner string `abi:"owner"`
-    DataName string `abi:"dataName"`
-    ReleaseTime *big.Int `abi:"releaseTime"`
-    KeyReleased bool `abi:"keyReleased"`
-    ReleasePhase *big.Int `abi:"releasePhase"`
-    DataId uint `abi:"dataId"`
-    VectorClocks []VectorClock `abi:"vectorClocks"`
-    Dependencies [][]byte `abi:"dependencies"`
-    SecurityLevel *big.Int `abi:"securityLevel"`
-}
-
-
 type DependencyInfo struct {
     VectorClocks []VectorClock
     Dependencies [][]byte
 }
 
-
-
-type KeyReleasedEvent struct {
-    PrivateKey []byte
-    Owner string 
-    DataName string 
-    DataId uint
-}
-
-type ReleaseEncryptedData struct {
-    EncryptedData []byte `abi:"encryptedData"`
-    PrivateKey []byte `abi:"privateKey"`
+type BroadcastMessage struct {
+    Data []byte `abi:"data"`
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
-    ReleaseTime *big.Int `abi:"releaseTime"`
+    MessageTimestamp *big.Int `abi:"messageTimestamp"`
     DataId uint `abi:"dataId"`
-    Dependencies [][]byte `abi:"dependencies"`
     VectorClocks []VectorClock `abi:"vectorClocks"`
+    Dependencies [][]byte `abi:"dependencies"`
 }
-
-
-
-type KeyReleaseRequestedEvent struct {
-    Index *big.Int `abi:"index"`
-    Owner string `abi:"owner"`
-    DataName string `abi:"dataName"`
-    DataId uint `abi:"dataId"`
-}
-
