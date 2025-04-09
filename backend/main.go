@@ -21,15 +21,11 @@ func main() {
     }
     fmt.Println("Starting the application...")
 
-
-    fmt.Println("ABI loaded successfully")
-
     contractAddress := os.Getenv("CONTRACT_ADDRESS") 
     privateKey := os.Getenv("PRIVATE_KEY")
 
-    securityLevel := uint(1)
     
-    c, err := contract.Init(contractAddress, privateKey, securityLevel)
+    c, err := contract.Init(contractAddress, privateKey)
     if err != nil {
         log.Fatalf("failed to initialize contract: %v", err)
     }

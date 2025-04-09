@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.19;
-import "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol"; //chainlink automation interface
 
-contract TwoPhaseDissemination is AutomationCompatibleInterface {
+contract LamportClock {
     uint256 public dataCounter;
 
     struct VectorClock {
@@ -12,64 +11,33 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
     }
 
     struct StoredData {
-        bytes encryptedData;
+        bytes data;
         string owner;
         string dataName;
-        uint256 releaseTime;
-        bool keyReleased;
-        int releasePhase;
-        bytes privateKey;
+        uint256 messageTimestamp;
         uint256 dataId;
         VectorClock[] vectorClocks;
         bytes32[] dependencies;
-        uint256 securityLevel;
     }
 
-    struct PrivateKeys {
-        string owner;
-        string dataName;
-        bytes privateKey;
-        uint256 dataId;
-    }
-    
     StoredData[] public storedData;
-    //mapping
-    PrivateKeys[] private privateKeys; 
-
-    mapping(address => uint256) public processSecurityLevel;
-    mapping(string => uint256) public dataSecurityLevel;
-
     
-    event ReleaseEncryptedData(
-        bytes encryptedData,
-        bytes privateKey,
+    event BroadcastMessage(
+        bytes data,
         string owner,
         string dataName,
-        uint256 releaseTime,
+        uint256 messageTimestamp,
         uint256 dataId,
         VectorClock[] vectorClocks,
         bytes32[] dependencies
     );
 
     event DependencyCheck(bytes32 dependency, bytes32 calculatedHash, bool found);
-    event KeyReleaseRequested(uint256 index, string owner, string dataName, uint256 dataId);
-    event KeyReleased(bytes privateKey, string owner, string dataName, uint256 dataId);
-
-    function setProcessSecurityLevel(address _process, uint256 level) public {
-        require(level > 0, "Security level must be greater than 0");
-        processSecurityLevel[_process] = level;
-    }
-
-    function setDataSecurityLevel(string memory _dataName, uint256 level) public {
-        require(level > 0, "Security level must be greater than 0");
-        dataSecurityLevel[_dataName] = level;
-    }
 
     function getCurrentDataId() public view returns (uint256) {
         return dataCounter;
     }
 
-    //get all stored data that is > the dataId
     function getMissingDataItems(uint256 _dataId) public view returns (StoredData[] memory) {
         require(_dataId < dataCounter, "Data ID is invalid");
         uint256 itemCount = 0;
@@ -86,61 +54,51 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
         return missingData;
     }
 
-    function getDependencyReleaseTimes(bytes32[] memory dependencies) public view returns (uint256[] memory){
-        uint256[] memory releaseTimes = new uint256[](dependencies.length);
+    function getDependencyTimestamps(bytes32[] memory dependencies) public view returns (uint256[] memory) {
+        uint256[] memory timestamps = new uint256[](dependencies.length);
 
-        for (uint i = 0; i < dependencies.length; i++){
-            releaseTimes[i] = 0;
-            for (uint j = 0; j < storedData.length; j++){
-                if (keccak256(abi.encodePacked(storedData[j].encryptedData)) == dependencies[i]){
-                    releaseTimes[i] = storedData[j].releaseTime;
+        for (uint i = 0; i < dependencies.length; i++) {
+            timestamps[i] = 0;
+            for (uint j = 0; j < storedData.length; j++) {
+                if (keccak256(abi.encodePacked(storedData[j].data)) == dependencies[i]) {
+                    timestamps[i] = storedData[j].messageTimestamp;
                     break;
                 }
             }
         }
-        return releaseTimes;
-    } 
+        return timestamps;
+    }
 
-
-    function addStoredData(
-        bytes memory _encryptedData,
-        bytes memory _privateKey,
+    function publishMessage(
+        bytes memory _data,
         string memory _owner,
         string memory _dataName,
-        uint256 _releaseTime,
-        bytes32[] memory _dependencies,
-        uint256 _securityLevel
+        bytes32[] memory _dependencies
     ) 
         public     
-        ValidInput(_encryptedData, _owner, _dataName, _releaseTime) 
-        ValidSecurityLevel(_securityLevel)
+        ValidInput(_data, _owner, _dataName) 
     {  
-        require(processSecurityLevel[msg.sender] >= _securityLevel, "Process security level is too low");
-
+        // Validate dependencies
         for (uint i = 0; i < _dependencies.length; i++) {
             bool found = false; 
-            for (uint j = 0; j < storedData.length; j++){
-                if (keccak256(abi.encodePacked(storedData[j].encryptedData)) == _dependencies[i]){
-                    require(storedData[j].releaseTime <= _releaseTime, "Release time must be after all dependencies");
+            for (uint j = 0; j < storedData.length; j++) {
+                if (keccak256(abi.encodePacked(storedData[j].data)) == _dependencies[i]) {
                     found = true;
                     break;
                 }
             }
             require(found, "Dependency not found");
         }
-        dataCounter++; //increment data counter for each new data added
+        
+        dataCounter++;
 
         StoredData storage newData = storedData.push();
-        newData.encryptedData = _encryptedData;
-        newData.privateKey = _privateKey;
+        newData.data = _data;
         newData.owner = _owner;
         newData.dataName = _dataName;
-        newData.releaseTime = _releaseTime;
-        newData.keyReleased = false;
-        newData.releasePhase = 0;
+        newData.messageTimestamp = block.timestamp;
         newData.dataId = dataCounter;
         newData.dependencies = _dependencies;
-        newData.securityLevel = _securityLevel;
 
         // Create vector clock directly in storage
         newData.vectorClocks.push(VectorClock({
@@ -148,131 +106,66 @@ contract TwoPhaseDissemination is AutomationCompatibleInterface {
             timeStamp: block.timestamp
         }));
 
-        //send out the encrypted data immediately 
-        emit ReleaseEncryptedData(
-            _encryptedData, 
-            _privateKey,
+        // Broadcast the message immediately
+        emit BroadcastMessage(
+            _data, 
             _owner, 
             _dataName, 
-            _releaseTime, 
+            block.timestamp, 
             dataCounter, 
             newData.vectorClocks, 
             _dependencies
         );
     }
 
-function checkMessageDependencies(bytes32[] memory dependencies) internal view returns (bool) {
-    for (uint i = 0; i < dependencies.length; i++) {
-        bool found = false;
-        for (uint j = 0; j < storedData.length; j++) {
-            bytes32 calculatedHash = keccak256(abi.encodePacked(storedData[j].encryptedData));
-            if (calculatedHash == dependencies[i]) {
-                // Also check if the key has been released
-                if (!storedData[j].keyReleased) {
-                    return false;  // Dependency exists but key not released
+    function checkMessageDependencies(bytes32[] memory dependencies) internal view returns (bool) {
+        for (uint i = 0; i < dependencies.length; i++) {
+            bool found = false;
+            for (uint j = 0; j < storedData.length; j++) {
+                bytes32 calculatedHash = keccak256(abi.encodePacked(storedData[j].data));
+                if (calculatedHash == dependencies[i]) {
+                    found = true;
+                    break;
                 }
-                found = true;
-                break;
+            }
+            if (!found) {
+                return false;  // Dependency not found
             }
         }
-        if (!found) {
-            return false;  // Dependency not found
-        }
+        return true;
     }
-    return true;
-}
 
-// Separate non-view debug function that can emit events if needed
-function debugCheckDependency(bytes32 dependency) public returns(bool, bytes32[] memory) {
-    bytes32[] memory dependencies = new bytes32[](1);
-    dependencies[0] = dependency;
+    function debugCheckDependency(bytes32 dependency) public returns(bool, bytes32[] memory) {
+        bytes32[] memory dependencies = new bytes32[](1);
+        dependencies[0] = dependency;
 
-    bytes32[] memory calculatedHashes = new bytes32[](storedData.length);
-    for (uint i = 0; i < storedData.length; i++) {
-        calculatedHashes[i] = keccak256(abi.encodePacked(storedData[i].encryptedData));
-        emit DependencyCheck(dependency, calculatedHashes[i], calculatedHashes[i] == dependency);
-    }
-    return (checkMessageDependencies(dependencies), calculatedHashes);
-}
-
-// Keep the view version for normal calls
-function checkDependency(bytes32 dependency) public view returns(bool, bytes32[] memory) {
-    bytes32[] memory dependencies = new bytes32[](1);
-    dependencies[0] = dependency;
-
-    bytes32[] memory calculatedHashes = new bytes32[](storedData.length);
-    for (uint i = 0; i < storedData.length; i++) {
-        calculatedHashes[i] = keccak256(abi.encodePacked(storedData[i].encryptedData));
-    }
-    return (checkMessageDependencies(dependencies), calculatedHashes);
-}
-
-
-
-    function checkUpkeep(bytes calldata )
-        external
-        view
-        override
-        returns (bool upkeepNeeded, bytes memory performData)
-    {
-        upkeepNeeded = false;
+        bytes32[] memory calculatedHashes = new bytes32[](storedData.length);
         for (uint i = 0; i < storedData.length; i++) {
-            if (storedData[i].releasePhase == 0 && storedData[i].releaseTime <= block.timestamp) {
-                upkeepNeeded = true;
-                break;
-            }
+            calculatedHashes[i] = keccak256(abi.encodePacked(storedData[i].data));
+            emit DependencyCheck(dependency, calculatedHashes[i], calculatedHashes[i] == dependency);
         }
-        return (upkeepNeeded, "");
+        return (checkMessageDependencies(dependencies), calculatedHashes);
     }
 
-    function performUpkeep(bytes calldata ) external override {
+    function checkDependency(bytes32 dependency) public view returns(bool, bytes32[] memory) {
+        bytes32[] memory dependencies = new bytes32[](1);
+        dependencies[0] = dependency;
+
+        bytes32[] memory calculatedHashes = new bytes32[](storedData.length);
         for (uint i = 0; i < storedData.length; i++) {
-            if (storedData[i].releasePhase == 0 && storedData[i].releaseTime <= block.timestamp) {
-                storedData[i].releasePhase = 1;
-                emit KeyReleaseRequested(i, storedData[i].owner, storedData[i].dataName, storedData[i].dataId);
-            }
+            calculatedHashes[i] = keccak256(abi.encodePacked(storedData[i].data));
         }
-    }
-    
-
-    function releaseKey(string memory _dataName, string memory _owner, bytes memory _privateKey) public { //will the private key sumbission be public???
-        for (uint i = 0; i < storedData.length; i++) {
-            if (
-                keccak256(abi.encodePacked(storedData[i].dataName)) == keccak256(abi.encodePacked(_dataName)) &&
-                keccak256(abi.encodePacked(storedData[i].owner)) == keccak256(abi.encodePacked(_owner))
-            ) {
-                require(!storedData[i].keyReleased, "Key already released");
-                require (processSecurityLevel[msg.sender] >= storedData[i].securityLevel, "Process security level is too low");
-                require(checkMessageDependencies(storedData[i].dependencies), "Not all dependenices met");
-                storedData[i].keyReleased = true;
-                privateKeys.push(PrivateKeys({
-                    owner: _owner,
-                    dataName: _dataName,
-                    privateKey: _privateKey,
-                    dataId: storedData[i].dataId
-                }));
-                emit KeyReleased(_privateKey, _owner, _dataName, storedData[i].dataId);
-                break;
-            }
-        }
-    }
-
-
-    modifier ValidSecurityLevel(uint256 _securityLevel) {
-        require(_securityLevel > 0, "Security level must be greater than 0");
-        _;
+        return (checkMessageDependencies(dependencies), calculatedHashes);
     }
     
     modifier ValidInput(
-        bytes memory _encryptedData,
+        bytes memory _data,
         string memory _owner,
-        string memory _dataName,
-        uint256 _releaseTime
+        string memory _dataName
     ) {
-        require(_encryptedData.length > 0, "Encrypted data is required");
+        require(_data.length > 0, "Data is required");
         require(bytes(_owner).length > 0, "Owner is required");
         require(bytes(_dataName).length > 0, "Data name is required");
-        require(_releaseTime > block.timestamp, "Release time must be in the future");
         _;
     }
 }

@@ -9,7 +9,7 @@ async function main() {
 
   console.log("Account balance:", ethers.formatEther(balance), "ETH");
 
-  const Contract = await ethers.getContractFactory("TwoPhaseDissemination");
+  const Contract = await ethers.getContractFactory("LamportClock");
   const contract = await Contract.deploy();
 
   await contract.waitForDeployment();
