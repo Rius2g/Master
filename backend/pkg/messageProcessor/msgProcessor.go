@@ -15,7 +15,7 @@ type MessageProcessor struct {
     errChannel chan error 
     ctx context.Context
     cancel context.CancelFunc
-    messageHashes map[string][]byte
+    messageHashes map[string][32]byte
 }
 
 func NewMessageProcessor(contract *c.ContractInteractionInterface) (*MessageProcessor, error) {
@@ -32,7 +32,7 @@ func NewMessageProcessor(contract *c.ContractInteractionInterface) (*MessageProc
         errChannel: make(chan error),
         ctx: ctx,
         cancel: cancel,
-        messageHashes: make(map[string][]byte),
+        messageHashes: make(map[string][32]byte),
     }, nil
 }
 
@@ -62,11 +62,19 @@ func (mp *MessageProcessor) processMessage(message t.Message) error {
     
     // Store the message hash for future reference
     hash := crypto.Keccak256([]byte(message.Content))
-    mp.messageHashes[message.DataName] = hash
+
+    var depHash [32]byte 
+    if len(hash) != 32 {
+        return fmt.Errorf("invalid hash length: %d", len(hash)) 
+    }
+
+    copy(depHash[:], hash) 
+
+    mp.messageHashes[message.DataName] = depHash 
     
     // Check if we should reply
     if shouldReplyTo(message){
-        dependencies := [][]byte{hash}
+        dependencies := [][32]byte{depHash}
         err := mp.contract.Upload(
             fmt.Sprintf("Reply to %s", message.DataName),
             "ReplyOwner",
@@ -85,7 +93,7 @@ func shouldReplyTo(message t.Message) bool {
     return false // Implement your logic here
 }
 
-func (mp *MessageProcessor) GetDependencyHash(dataName string) ([]byte, bool){
+func (mp *MessageProcessor) GetDependencyHash(dataName string) ([32]byte, bool){
     hash, ok := mp.messageHashes[dataName]
     return hash, ok
 }

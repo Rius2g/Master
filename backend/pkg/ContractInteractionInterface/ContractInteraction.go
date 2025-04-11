@@ -32,10 +32,10 @@ type ContractInteractionInterface struct {
     ContractABI     abi.ABI
     Client          *ethclient.Client
     PrivateKey      string 
-    DataIdCounter   uint
-    Data            map[uint][]byte
+    DataIdCounter   *big.Int 
+    Data            map[*big.Int][]byte
     ProcessID       common.Address
-    Dependencies    map[uint]t.DependencyInfo
+    Dependencies    map[*big.Int]t.DependencyInfo
     VectorClock     map[string]*big.Int
 }
 
@@ -62,10 +62,10 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
         ContractABI:     contractABI,
         Client:          client,
         PrivateKey:      privateKey,
-        DataIdCounter:   0,
-        Data:            make(map[uint][]byte),
+        DataIdCounter:   big.NewInt(0),
+        Data:            make(map[*big.Int][]byte),
         ProcessID:       processAddress,
-        Dependencies:    make(map[uint]t.DependencyInfo),
+        Dependencies:    make(map[*big.Int]t.DependencyInfo),
         VectorClock:     make(map[string]*big.Int),
     }
 
@@ -76,7 +76,7 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
     return &contInterface, nil
 }
 
-func (c *ContractInteractionInterface) Upload(data, owner, dataName string, dependencies [][]byte) error {
+func (c *ContractInteractionInterface) Upload(data, owner, dataName string, dependencies [][32]byte) error {
     if len(data) == 0 || len(owner) == 0 || len(dataName) == 0 {
         return fmt.Errorf("invalid input data")
     }
@@ -136,7 +136,7 @@ func (c *ContractInteractionInterface) RetrieveMissing() error {
     ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
     defer cancel()
 
-    input, err := c.ContractABI.Pack("getMissingDataItems", big.NewInt(int64(c.DataIdCounter)))
+    input, err := c.ContractABI.Pack("getMissingDataItems", c.DataIdCounter)
     if err != nil {
         return fmt.Errorf("failed to pack input data: %v", err)
     }
@@ -190,7 +190,7 @@ func (c *ContractInteractionInterface) RetriveCurrentDataID() error {
         return fmt.Errorf("failed to unpack return value: %v", err)
     }
 
-    c.DataIdCounter = uint(returnVal.Uint64())
+    c.DataIdCounter = returnVal
     return nil
 }
 
@@ -266,7 +266,7 @@ func (c *ContractInteractionInterface) handleEvent(vLog types.Log, messages chan
             return
         }
 
-        if event.DataId > c.DataIdCounter+1 {
+        if event.DataId.Int64() > c.DataIdCounter.Int64() {
             // Missing entry, ask for them
             c.RetrieveMissing()
         }
