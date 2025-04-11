@@ -13,7 +13,7 @@ type StoredData struct {
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
     MessageTimestamp *big.Int `abi:"messageTimestamp"`
-    DataId uint `abi:"dataId"`
+    DataId *big.Int `abi:"dataId"`
     VectorClocks []VectorClock `abi:"vectorClocks"`
     Dependencies [][]byte `abi:"dependencies"`
 }
@@ -30,6 +30,7 @@ type VectorClock struct {
 type Message struct {
     Content string 
     Time time.Time
+    DataId *big.Int 
     Owner string 
     DataName string
     VectorClocks []VectorClock 
@@ -46,7 +47,7 @@ type BroadcastMessage struct {
     Owner string `abi:"owner"`
     DataName string `abi:"dataName"`
     MessageTimestamp *big.Int `abi:"messageTimestamp"`
-    DataId uint `abi:"dataId"`
+    DataId *big.Int `abi:"dataId"`
     VectorClocks []VectorClock `abi:"vectorClocks"`
     Dependencies [][]byte `abi:"dependencies"`
 }
