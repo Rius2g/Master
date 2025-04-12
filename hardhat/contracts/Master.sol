@@ -22,6 +22,11 @@ contract LamportClock {
 
     StoredData[] public storedData;
     
+    // Mapping to quickly check if a message with a given hash exists
+    // This optimizes dependency checking
+    mapping(bytes32 => bool) public messageExists;
+    mapping(bytes32 => uint256) public messageTimestamps;
+    
     event BroadcastMessage(
         bytes data,
         string owner,
@@ -58,13 +63,7 @@ contract LamportClock {
         uint256[] memory timestamps = new uint256[](dependencies.length);
 
         for (uint i = 0; i < dependencies.length; i++) {
-            timestamps[i] = 0;
-            for (uint j = 0; j < storedData.length; j++) {
-                if (keccak256(abi.encodePacked(storedData[j].data)) == dependencies[i]) {
-                    timestamps[i] = storedData[j].messageTimestamp;
-                    break;
-                }
-            }
+            timestamps[i] = messageTimestamps[dependencies[i]];
         }
         return timestamps;
     }
@@ -78,16 +77,9 @@ contract LamportClock {
         public     
         ValidInput(_data, _owner, _dataName) 
     {  
-        // Validate dependencies
+        // Validate dependencies using the optimized mapping
         for (uint i = 0; i < _dependencies.length; i++) {
-            bool found = false; 
-            for (uint j = 0; j < storedData.length; j++) {
-                if (keccak256(abi.encodePacked(storedData[j].data)) == _dependencies[i]) {
-                    found = true;
-                    break;
-                }
-            }
-            require(found, "Dependency not found");
+            require(messageExists[_dependencies[i]], "Dependency not found");
         }
         
         dataCounter++;
@@ -106,6 +98,11 @@ contract LamportClock {
             timeStamp: block.timestamp
         }));
 
+        // Store message hash for quick lookup
+        bytes32 msgHash = keccak256(abi.encodePacked(_data));
+        messageExists[msgHash] = true;
+        messageTimestamps[msgHash] = block.timestamp;
+
         // Broadcast the message immediately
         emit BroadcastMessage(
             _data, 
@@ -118,17 +115,77 @@ contract LamportClock {
         );
     }
 
-    function checkMessageDependencies(bytes32[] memory dependencies) internal view returns (bool) {
-        for (uint i = 0; i < dependencies.length; i++) {
-            bool found = false;
-            for (uint j = 0; j < storedData.length; j++) {
-                bytes32 calculatedHash = keccak256(abi.encodePacked(storedData[j].data));
-                if (calculatedHash == dependencies[i]) {
-                    found = true;
+    // New batch publishing function to handle multiple messages at once
+    function publishBatchMessages(
+        bytes[] memory _dataArray,
+        string[] memory _ownerArray,
+        string[] memory _dataNameArray,
+        bytes32[][] memory _dependenciesArray
+    ) public {
+        // Validate input arrays have the same length
+        require(_dataArray.length == _ownerArray.length, "Arrays must have same length");
+        require(_dataArray.length == _dataNameArray.length, "Arrays must have same length");
+        require(_dataArray.length == _dependenciesArray.length, "Arrays must have same length");
+        
+        // Process each message in the batch
+        for (uint i = 0; i < _dataArray.length; i++) {
+            // Skip validation for empty data
+            if (_dataArray[i].length == 0 || bytes(_ownerArray[i]).length == 0 || bytes(_dataNameArray[i]).length == 0) {
+                continue;
+            }
+            
+            // Validate dependencies
+            bool dependenciesValid = true;
+            for (uint j = 0; j < _dependenciesArray[i].length; j++) {
+                if (!messageExists[_dependenciesArray[i][j]]) {
+                    dependenciesValid = false;
                     break;
                 }
             }
-            if (!found) {
+            
+            // Skip this message if dependencies aren't valid
+            if (!dependenciesValid) {
+                continue;
+            }
+            
+            // Process this message
+            dataCounter++;
+            
+            StoredData storage newData = storedData.push();
+            newData.data = _dataArray[i];
+            newData.owner = _ownerArray[i];
+            newData.dataName = _dataNameArray[i];
+            newData.messageTimestamp = block.timestamp;
+            newData.dataId = dataCounter;
+            newData.dependencies = _dependenciesArray[i];
+            
+            // Create vector clock
+            newData.vectorClocks.push(VectorClock({
+                process: msg.sender,
+                timeStamp: block.timestamp
+            }));
+            
+            // Store message hash for quick lookup
+            bytes32 msgHash = keccak256(abi.encodePacked(_dataArray[i]));
+            messageExists[msgHash] = true;
+            messageTimestamps[msgHash] = block.timestamp;
+            
+            // Emit event for this message
+            emit BroadcastMessage(
+                _dataArray[i],
+                _ownerArray[i],
+                _dataNameArray[i],
+                block.timestamp,
+                dataCounter,
+                newData.vectorClocks,
+                _dependenciesArray[i]
+            );
+        }
+    }
+    
+    function checkMessageDependencies(bytes32[] memory dependencies) internal view returns (bool) {
+        for (uint i = 0; i < dependencies.length; i++) {
+            if (!messageExists[dependencies[i]]) {
                 return false;  // Dependency not found
             }
         }
