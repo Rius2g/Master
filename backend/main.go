@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-    "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -24,15 +26,21 @@ var (
 	port            = flag.String("port", "8080", "Port to run the HTTP server on")
 	stressMode      = flag.Bool("stress", false, "Enable stress test mode (continuous publishing of messages)")
 	publishInterval = flag.Duration("publishInterval", 100*time.Millisecond, "Interval between publishing messages")
+	batchMode       = flag.Bool("batch", false, "Enable batch publishing mode")
+	batchSize       = flag.Int("batchSize", 10, "Number of messages to send in each batch")
+	batchInterval   = flag.Duration("batchInterval", 100*time.Millisecond, "Interval between batches")
+	envFile         = flag.String("env-file", ".env", "Path to environment file")
+	concurrency     = flag.Int("concurrency", 5, "Number of concurrent message publishers")
 )
 
-var messagesPublished int      // Global counter for published messages
-var runStartTime time.Time       // Track the start time of the experiment
-var logFile *os.File             // Global handle for the log file
+var (
+	messagesPublished int        // Global counter for published messages
+	runStartTime      time.Time  // Track the start time of the experiment
+	logFile           *os.File   // Global handle for the log file
+	publishMutex      sync.Mutex // Mutex to protect the messages published counter
+)
 
-//
 // Helper: JSON logging function
-//
 func logJSON(record map[string]any) {
 	record["timestamp"] = time.Now().Format(time.RFC3339Nano)
 	bytes, err := json.Marshal(record)
@@ -43,9 +51,7 @@ func logJSON(record map[string]any) {
 	log.Println(string(bytes))
 }
 
-//
 // Publisher: continuously publishes messages for stress testing
-//
 func startPublisher(ctx context.Context, contractClient *contract.ContractInteractionInterface) {
 	seq := 1
 	ticker := time.NewTicker(*publishInterval)
@@ -54,9 +60,32 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 	// lastDep will hold the hash (converted to [32]byte) of the previous message.
 	var lastDep [32]byte
 
+	// Use a worker pool for concurrent publishing
+	publishCh := make(chan struct {
+		payload []byte
+		seq     int
+		deps    [][32]byte
+		name    string
+	}, 100) // Buffer channel to avoid blocking
+
+	// Start worker goroutines
+	workerCount := getEnvInt("CONCURRENT_PUBLISHES", *concurrency)
+	var wg sync.WaitGroup
+    for i := range(workerCount) {
+		wg.Add(1)
+		go func(workerId int) {
+			defer wg.Done()
+			for job := range publishCh {
+				publishMessage(contractClient, job.payload, job.seq, job.deps, job.name)
+			}
+		}(i)
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
+			close(publishCh) // Stop all workers
+			wg.Wait()        // Wait for all workers to finish
 			logJSON(map[string]any{
 				"event": "publisher_stopped",
 				"node":  *instanceID,
@@ -102,26 +131,29 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 			// Use seq as part of dataName to help track ordering.
 			dataName := fmt.Sprintf("%s-%d", *instanceID, seq)
 
-			// Publish the message via the contract interface with dependencies.
-			err = contractClient.Upload(string(payloadBytes), *instanceID, dataName, deps)
-			if err != nil {
+			// Send to worker pool instead of publishing directly
+			job := struct {
+				payload []byte
+				seq     int
+				deps    [][32]byte
+				name    string
+			}{
+				payload: payloadBytes,
+				seq:     seq,
+				deps:    deps,
+				name:    dataName,
+			}
+
+			select {
+			case publishCh <- job:
+				// Successfully queued
+			default:
+				// Channel full, log warning
 				logJSON(map[string]any{
-					"event": "publish_error",
+					"event": "publish_queue_full",
 					"node":  *instanceID,
 					"seq":   seq,
-					"error": err.Error(),
 				})
-			} else {
-				logJSON(map[string]any{
-					"event":         "message_published",
-					"node":          *instanceID,
-					"seq":           seq,
-					"dataName":      dataName,
-					"publishTime":   t.Format(time.RFC3339Nano),
-					"payload":       string(payloadBytes),
-					"dependencies":  deps, // Log dependencies for debugging.
-				})
-				messagesPublished++
 			}
 
 			// Save current message's hash for potential dependency in the next message.
@@ -131,38 +163,137 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 	}
 }
 
-//
-// HTTP handler for reporting in-memory metrics
-//
-func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	metrics := map[string]any{
-		"node":              *instanceID,
-		"port":              *port,
-		"messagesPublished": messagesPublished,
-		"timestamp":         time.Now().Format(time.RFC3339Nano),
+// Helper function to publish a message
+func publishMessage(contractClient *contract.ContractInteractionInterface, payloadBytes []byte, seq int, deps [][32]byte, dataName string) {
+	startTime := time.Now()
+	fmt.Println("Publishing message..., time: ", startTime)
+	
+	err := contractClient.Upload(string(payloadBytes), *instanceID, dataName, deps)
+	if err != nil {
+		logJSON(map[string]any{
+			"event":        "publish_error",
+			"node":         *instanceID,
+			"seq":          seq,
+			"error":        err.Error(),
+			"publish_time": time.Now().Sub(startTime).Milliseconds(),
+		})
+	} else {
+		logJSON(map[string]any{
+			"event":         "message_published",
+			"node":          *instanceID,
+			"seq":           seq,
+			"dataName":      dataName,
+			"publishTime":   startTime.Format(time.RFC3339Nano),
+			"publish_latency_ms": time.Now().Sub(startTime).Milliseconds(),
+			"payload":       string(payloadBytes),
+			"dependencies":  deps, // Log dependencies for debugging.
+		})
+		
+		// Thread-safe increment of messages published
+		publishMutex.Lock()
+		messagesPublished++
+		publishMutex.Unlock()
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(metrics)
 }
 
-//
-// Start the HTTP server (useful for health checks if needed)
-//
-func startHTTPServer() {
-	http.HandleFunc("/metrics", metricsHandler)
-	logJSON(map[string]any{
-		"event": "http_server_start",
-		"node":  *instanceID,
-		"port":  *port,
-	})
-	if err := http.ListenAndServe(":"+*port, nil); err != nil {
-		log.Fatalf("failed to start HTTP server: %v", err)
-	}
+// Add this function to your main.go file to implement batch publishing
+// This will significantly increase throughput by sending multiple messages at once
+
+func startBatchPublisher(ctx context.Context, contractClient *contract.ContractInteractionInterface, batchSize int, batchInterval time.Duration) {
+    seq := 1
+    ticker := time.NewTicker(batchInterval)
+    fmt.Println("Batch Size:", batchSize)
+    fmt.Println("Batch Interval:", batchInterval) 
+    defer ticker.Stop()
+
+    // lastDep will hold the hash (converted to [32]byte) of the previous message.
+    var lastDep [32]byte
+
+    for {
+        select {
+        case <-ctx.Done():
+            logJSON(map[string]any{
+                "event": "publisher_stopped",
+                "node":  *instanceID,
+            })
+            return
+        case t := <-ticker.C:
+            // Create a batch of messages
+            for i := range(batchSize) {
+                // Create payload with instanceID, sequence number, timestamp.
+                payload := map[string]any{
+                    "instance":    *instanceID,
+                    "seq":         seq,
+                    "batch":       i,
+                    "publishedAt": t.Add(time.Duration(i) * time.Microsecond).Format(time.RFC3339Nano),
+                }
+                payloadBytes, err := json.Marshal(payload)
+                if err != nil {
+                    logJSON(map[string]any{
+                        "event": "payload_marshal_error",
+                        "node":  *instanceID,
+                        "error": err.Error(),
+                    })
+                    continue
+                }
+
+                // Compute hash of the payload; this hash will be used for dependency.
+                hash := crypto.Keccak256(payloadBytes)
+                var fixedHash [32]byte
+                if len(hash) != 32 {
+                    logJSON(map[string]any{
+                        "event": "hash_error",
+                        "node":  *instanceID,
+                        "error": fmt.Sprintf("hash length %d", len(hash)),
+                    })
+                    continue
+                }
+                copy(fixedHash[:], hash)
+
+                // Build the dependencies slice.
+                // In this example, every third message depends on the previous message.
+                var deps [][32]byte
+                if seq > 1 && seq%3 == 0 {
+                    deps = append(deps, lastDep)
+                }
+
+                // Use seq as part of dataName to help track ordering.
+                dataName := fmt.Sprintf("%s-%d-%d", *instanceID, seq, i)
+
+                // Launch goroutine to publish the message asynchronously
+                go func(payload []byte, dataName string, deps [][32]byte, seqNum int) {
+                    fmt.Println("Publishing message..., time: ", time.Now())
+                    err := contractClient.Upload(string(payload), *instanceID, dataName, deps)
+                    if err != nil {
+                        logJSON(map[string]any{
+                            "event": "publish_error",
+                            "node":  *instanceID,
+                            "seq":   seqNum,
+                            "error": err.Error(),
+                        })
+                    } else {
+                        logJSON(map[string]any{
+                            "event":         "message_published",
+                            "node":          *instanceID,
+                            "seq":           seqNum,
+                            "dataName":      dataName,
+                            "publishTime":   t.Format(time.RFC3339Nano),
+                            "payload":       string(payload),
+                            "dependencies":  deps, // Log dependencies for debugging.
+                        })
+                        messagesPublished++
+                    }
+                }(payloadBytes, dataName, deps, seq)
+
+                // Save current message's hash for potential dependency in the next message.
+                lastDep = fixedHash
+                seq++
+            }
+        }
+    }
 }
 
-//
 // Setup logging to a file
-//
 func setupLogging() {
 	var err error
 	logFile, err = os.OpenFile("experiment_results.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -173,45 +304,73 @@ func setupLogging() {
 	log.SetOutput(logFile)
 }
 
-//
 // Close the log file on exit
-//
 func cleanupLogging() {
 	if logFile != nil {
 		logFile.Close()
 	}
 }
 
-//
+// Helper to get integer from environment with default
+func getEnvInt(key string, defaultVal int) int {
+	if val, exists := os.LookupEnv(key); exists {
+		if intVal, err := strconv.Atoi(val); err == nil {
+			return intVal
+		}
+	}
+	return defaultVal
+}
+
+// Helper to get bool from environment with default
+func getEnvBool(key string, defaultVal bool) bool {
+	if val, exists := os.LookupEnv(key); exists {
+		if boolVal, err := strconv.ParseBool(val); err == nil {
+			return boolVal
+		}
+	}
+	return defaultVal
+}
+
 // main – modified to include results logging to file
-//
 func main() {
-    fmt.Println("Starting the application...")
+	fmt.Println("Starting the application...")
 	flag.Parse()
 	runStartTime = time.Now()
+
+	// Set GOMAXPROCS to use all available cores
+	numCPU := runtime.NumCPU()
+	runtime.GOMAXPROCS(numCPU)
+	fmt.Printf("Using %d CPU cores\n", numCPU)
 
 	// Set up logging to file
 	setupLogging()
 	defer cleanupLogging()
 
-	// Load .env settings
-	if err := godotenv.Load(); err != nil {
+	// Load environment settings
+	if err := godotenv.Load(*envFile); err != nil {
 		logJSON(map[string]any{
 			"event": "env_load_error",
 			"error": err.Error(),
 		})
-		log.Fatalf("Error loading .env file: %v", err)
+		// Try to load default .env if custom one fails
+		if *envFile != ".env" {
+			if err := godotenv.Load(); err != nil {
+				log.Printf("Warning: could not load default .env file: %v", err)
+			}
+		}
 	}
+	
 	logJSON(map[string]any{
-		"event": "application_start",
-		"node":  *instanceID,
+		"event":      "application_start",
+		"node":       *instanceID,
+		"batch_mode": *batchMode,
+		"concurrency": *concurrency,
 	})
 
 	// Initialize smart contract and message processor
 	contractAddress := os.Getenv("CONTRACT_ADDRESS")
 	privateKey := os.Getenv("PRIVATE_KEY")
-    fmt.Println("Contract Address:", contractAddress) 
-    fmt.Println("Private Key:", privateKey)
+	
 	c, err := contract.Init(contractAddress, privateKey)
 	if err != nil {
 		logJSON(map[string]any{
@@ -253,20 +412,51 @@ func main() {
 		}
 	}()
 
-	// If stress mode is enabled, start the publisher
+	// Start publishers based on mode
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	
 	if *stressMode {
-		go startPublisher(ctx, c)
+		if *batchMode || getEnvBool("ENABLE_BATCHING", false) {
+			// Use batch publisher for higher throughput
+			go startBatchPublisher(ctx, c, *batchSize, *batchInterval)
+		} else {
+			// Use regular publisher with worker pool
+			go startPublisher(ctx, c)
+		}
 	}
-
-	// Start the HTTP server in a goroutine
-	go startHTTPServer()
 
 	logJSON(map[string]any{
 		"event": "ordering_check_enabled",
 		"node":  *instanceID,
 	})
+
+	// Print periodic stats
+	go func() {
+		statsTicker := time.NewTicker(10 * time.Second)
+		defer statsTicker.Stop()
+		
+		lastCount := 0
+		lastTime := time.Now()
+		
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case t := <-statsTicker.C:
+				publishMutex.Lock()
+				currentCount := messagesPublished
+				currentTime := t
+				ratePerSecond := float64(currentCount-lastCount) / currentTime.Sub(lastTime).Seconds()
+				publishMutex.Unlock()
+				
+				fmt.Printf("[STATS] Messages per second: %.2f, Total: %d\n", ratePerSecond, currentCount)
+				
+				lastCount = currentCount
+				lastTime = currentTime
+			}
+		}
+	}()
 
 	// Wait for termination signal
 	sigChan := make(chan os.Signal, 1)
@@ -277,11 +467,11 @@ func main() {
 	runEndTime := time.Now()
 	duration := runEndTime.Sub(runStartTime).Seconds()
 	summary := map[string]any{
-		"event":             "experiment_summary",
-		"node":              *instanceID,
-		"run_duration_sec":  duration,
+		"event":              "experiment_summary",
+		"node":               *instanceID,
+		"run_duration_sec":   duration,
 		"messages_published": messagesPublished,
-		"avg_publish_rate":  float64(messagesPublished) / duration, // messages per second
+		"avg_publish_rate":   float64(messagesPublished) / duration, // messages per second
 	}
 	logJSON(summary)
 
@@ -290,4 +480,3 @@ func main() {
 		"node":  *instanceID,
 	})
 }
-

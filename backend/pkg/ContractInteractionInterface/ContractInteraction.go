@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "strings"
+    "sync"
     "time"
     h "github.com/rius2g/Master/backend/helper"
     t "github.com/rius2g/Master/backend/pkg/types"
@@ -37,6 +38,8 @@ type ContractInteractionInterface struct {
     ProcessID       common.Address
     Dependencies    map[*big.Int]t.DependencyInfo
     VectorClock     map[string]*big.Int
+    nonceManager   *NonceManager
+    txLock      sync.Mutex
 }
 
 func Init(contractAddress, privateKey string)(*ContractInteractionInterface, error) {
@@ -57,6 +60,18 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
 
     processAddress := crypto.PubkeyToAddress(privKey.PublicKey)
 
+    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    defer cancel()
+
+    initialNonce, err := client.PendingNonceAt(ctx, processAddress)
+    if err != nil {
+        return nil, fmt.Errorf("failed to retrieve initial nonce: %v", err) 
+    }
+
+    nonceManager := NewNonceManager(processAddress, initialNonce) 
+
+
+
     contInterface := ContractInteractionInterface{
         ContractAddress: common.HexToAddress(contractAddress),
         ContractABI:     contractABI,
@@ -67,6 +82,7 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
         ProcessID:       processAddress,
         Dependencies:    make(map[*big.Int]t.DependencyInfo),
         VectorClock:     make(map[string]*big.Int),
+        nonceManager:   nonceManager,
     }
 
     if err := contInterface.RetriveCurrentDataID(); err != nil {
@@ -310,8 +326,12 @@ func (c *ContractInteractionInterface) handleEvent(vLog types.Log, messages chan
     }
 }
 
+// Optimize the executeTransaction function in ContractInteractionInterface
 func (c *ContractInteractionInterface) executeTransaction(input []byte) error {
-    // Transaction execution code remains mostly the same
+    // Lock to synchronize transaction submissions
+    c.txLock.Lock()
+    defer c.txLock.Unlock()
+    
     privkey, err := crypto.HexToECDSA(strings.TrimPrefix(c.PrivateKey, "0x"))
     if err != nil {
         return fmt.Errorf("failed to parse private key: %v", err)
@@ -322,32 +342,34 @@ func (c *ContractInteractionInterface) executeTransaction(input []byte) error {
         return fmt.Errorf("failed HexToECDSA: %v", err)
     }
 
+    // Use a longer context timeout
     ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
     defer cancel()
 
-    gasPrice, err := c.Client.SuggestGasPrice(ctx)
+    // Get gas price with a separate context
+    gasPriceCtx, gasPriceCancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer gasPriceCancel()
+    
+    gasPrice, err := c.Client.SuggestGasPrice(gasPriceCtx)
     if err != nil {
-        return fmt.Errorf("failed to suggest gas price: %v", err)
+        // If we can't get gas price, use a fallback value
+        gasPrice = big.NewInt(25000000000) // 25 Gwei
+        log.Printf("Using fallback gas price: %s", gasPrice.String())
+    } else {
+        // Increase by 50% instead of 300% to save on costs while still being prioritized
+        gasPrice = new(big.Int).Mul(gasPrice, big.NewInt(150))
+        gasPrice = new(big.Int).Div(gasPrice, big.NewInt(100))
     }
 
-    gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
-        From: auth.From,
-        To:   &c.ContractAddress,
-        Gas:  0,
-        GasPrice: gasPrice,
-        Value: big.NewInt(0),
-        Data: input,
-    })
+    // Use fixed gas limit to avoid estimation
+    gasLimit := uint64(300000)
 
-    if err != nil {
-        return fmt.Errorf("failed to estimate gas: %v", err)
-    }
-
-    gasLimit = uint64(float64(gasLimit) * 1.2)
-
-    nonce, err := c.Client.PendingNonceAt(ctx, auth.From)
-    if err != nil {
-        return fmt.Errorf("failed to retrieve nonce: %v", err)
+    // Get nonce from local manager instead of RPC call
+    nonce := c.nonceManager.GetNonce(auth.From)
+    
+    // Every 50 transactions, try to resync our nonce with the network
+    if nonce%50 == 0 {
+        go c.resyncNonce(auth.From)
     }
 
     tx := types.NewTransaction(nonce, c.ContractAddress, big.NewInt(0), gasLimit, gasPrice, input)
@@ -359,14 +381,45 @@ func (c *ContractInteractionInterface) executeTransaction(input []byte) error {
 
     err = c.Client.SendTransaction(ctx, signedTx)
     if err != nil {
+        if strings.Contains(err.Error(), "nonce too low") || 
+           strings.Contains(err.Error(), "replacement transaction underpriced") {
+            // If nonce error, try to recover by fetching from network
+            log.Printf("Nonce error detected: %v, attempting to resync nonce", err)
+            if resyncErr := c.resyncNonce(auth.From); resyncErr == nil {
+                // Retry with new nonce
+                newNonce := c.nonceManager.GetNonce(auth.From)
+                newTx := types.NewTransaction(newNonce, c.ContractAddress, big.NewInt(0), gasLimit, gasPrice, input)
+                newSignedTx, signErr := types.SignTx(newTx, types.NewEIP155Signer(big.NewInt(43113)), privkey)
+                if signErr != nil {
+                    return fmt.Errorf("failed to sign retry transaction: %v", signErr)
+                }
+                
+                if retryErr := c.Client.SendTransaction(ctx, newSignedTx); retryErr != nil {
+                    return fmt.Errorf("failed to send retry transaction: %v", retryErr)
+                }
+                log.Printf("Retry transaction sent successfully with nonce %d: %s", 
+                    newNonce, newSignedTx.Hash().Hex())
+                return nil
+            }
+        }
         return fmt.Errorf("failed to send transaction: %v", err)
     }
 
-    receipt, err := bind.WaitMined(ctx, c.Client, signedTx)
-    if err != nil {
-        return fmt.Errorf("failed to wait for transaction to be mined: %v", err)
-    }
+    log.Printf("Transaction sent: %s with nonce %d", signedTx.Hash().Hex(), nonce)
+    return nil
+}
 
-    log.Printf("Transaction sent: %s", receipt.TxHash.Hex())
+
+func (c *ContractInteractionInterface) resyncNonce(address common.Address) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    
+    nonce, err := c.Client.PendingNonceAt(ctx, address)
+    if err != nil {
+        return err
+    }
+    
+    c.nonceManager.ResetNonce(address, nonce)
+    log.Printf("Resynced nonce for %s to %d", address.Hex(), nonce)
     return nil
 }
