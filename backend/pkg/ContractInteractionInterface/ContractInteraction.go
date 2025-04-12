@@ -40,6 +40,9 @@ type ContractInteractionInterface struct {
     VectorClock     map[string]*big.Int
     nonceManager   *NonceManager
     txLock      sync.Mutex
+    DependencyTracker *DependencyTracker
+    txHashMap map[string][32]byte
+    txHashMapLock sync.RWMutex
 }
 
 func Init(contractAddress, privateKey string)(*ContractInteractionInterface, error) {
@@ -70,8 +73,6 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
 
     nonceManager := NewNonceManager(processAddress, initialNonce) 
 
-
-
     contInterface := ContractInteractionInterface{
         ContractAddress: common.HexToAddress(contractAddress),
         ContractABI:     contractABI,
@@ -83,7 +84,10 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
         Dependencies:    make(map[*big.Int]t.DependencyInfo),
         VectorClock:     make(map[string]*big.Int),
         nonceManager:   nonceManager,
+        txHashMap:       make(map[string][32]byte),
     }
+
+    contInterface.DependencyTracker = NewDependencyTracker(&contInterface)
 
     if err := contInterface.RetriveCurrentDataID(); err != nil {
         return nil, fmt.Errorf("failed to retrieve current data ID: %v", err)
@@ -95,6 +99,20 @@ func Init(contractAddress, privateKey string)(*ContractInteractionInterface, err
 func (c *ContractInteractionInterface) Upload(data, owner, dataName string, dependencies [][32]byte) error {
     if len(data) == 0 || len(owner) == 0 || len(dataName) == 0 {
         return fmt.Errorf("invalid input data")
+    }
+
+    if c.DependencyTracker != nil {
+        messageHash := crypto.Keccak256Hash([]byte(data)) 
+        var hash32 [32]byte 
+        copy(hash32[:], messageHash[:]) 
+
+        if len(dependencies) > 0 {
+            for _, dep := range dependencies {
+                if !c.DependencyTracker.IsConfirmed(dep) {
+                    return c.DependencyTracker.QueueMessage(data, owner, dataName, dependencies)
+                }
+            }
+        }
     }
 
     // Validate dependencies
@@ -258,6 +276,7 @@ func (c *ContractInteractionInterface) Listen(ctx context.Context) (<-chan t.Mes
                 }
 
             case vLog := <-logs:
+                fmt.Printf("Received log: %s", vLog.TxHash.Hex())
                 c.handleEvent(vLog, messages)
 
             case <-ctx.Done():
@@ -273,6 +292,20 @@ func (c *ContractInteractionInterface) handleEvent(vLog types.Log, messages chan
     txHash := vLog.TxHash.Hex()
     receiveTime := time.Now()
     fmt.Printf("Received log: %s at %s\n", txHash, receiveTime)
+
+    if c.txHashMap != nil {
+        c.txHashMapLock.RLock()
+        messageHash, exists := c.txHashMap[txHash]
+        c.txHashMapLock.RUnlock() 
+
+        if exists && c.DependencyTracker != nil {
+            c.DependencyTracker.ConfirmMessage(messageHash)
+
+            c.txHashMapLock.Lock()
+            delete(c.txHashMap, txHash) 
+            c.txHashMapLock.Unlock()
+        }
+    }
 
     switch vLog.Topics[0].Hex() {
     case c.ContractABI.Events["BroadcastMessage"].ID.Hex():
@@ -362,7 +395,7 @@ func (c *ContractInteractionInterface) executeTransaction(input []byte) error {
     }
 
     // Use fixed gas limit to avoid estimation
-    gasLimit := uint64(300000)
+    gasLimit := uint64(10000000)
 
     // Get nonce from local manager instead of RPC call
     nonce := c.nonceManager.GetNonce(auth.From)
@@ -406,7 +439,24 @@ func (c *ContractInteractionInterface) executeTransaction(input []byte) error {
     }
 
     log.Printf("Transaction sent: %s with nonce %d", signedTx.Hash().Hex(), nonce)
-    return nil
+    
+    if len(input) > 4 {
+        dataPart := input[4:]
+
+        if len(dataPart) > 32 {
+            messageHash := crypto.Keccak256Hash(dataPart)
+            var hash32 [32]byte
+            copy(hash32[:], messageHash[:]) 
+
+            c.txHashMapLock.Lock()
+            c.txHashMap[signedTx.Hash().Hex()] = hash32 
+            c.txHashMapLock.Unlock()
+
+            log.Printf("Stored transaction hash %s with message hash %x", signedTx.Hash().Hex(), hash32)
+        }
+    }
+
+       return nil
 }
 
 
