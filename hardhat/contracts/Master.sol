@@ -29,10 +29,10 @@ contract LamportClock {
     
     event BroadcastMessage(
         bytes data,
-        string owner,
-        string dataName,
+        string indexed owner,
+        string indexed dataName,
         uint256 messageTimestamp,
-        uint256 dataId,
+        uint256 indexed dataId,
         VectorClock[] vectorClocks,
         bytes32[] dependencies
     );
