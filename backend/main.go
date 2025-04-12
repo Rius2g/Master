@@ -166,7 +166,6 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 // Helper function to publish a message
 func publishMessage(contractClient *contract.ContractInteractionInterface, payloadBytes []byte, seq int, deps [][32]byte, dataName string) {
 	startTime := time.Now()
-	fmt.Println("Publishing message..., time: ", startTime)
 	
 	err := contractClient.Upload(string(payloadBytes), *instanceID, dataName, deps)
 	if err != nil {
@@ -202,8 +201,6 @@ func publishMessage(contractClient *contract.ContractInteractionInterface, paylo
 func startBatchPublisher(ctx context.Context, contractClient *contract.ContractInteractionInterface, batchSize int, batchInterval time.Duration) {
     seq := 1
     ticker := time.NewTicker(batchInterval)
-    fmt.Println("Batch Size:", batchSize)
-    fmt.Println("Batch Interval:", batchInterval) 
     defer ticker.Stop()
 
     // lastDep will hold the hash (converted to [32]byte) of the previous message.
@@ -262,7 +259,6 @@ func startBatchPublisher(ctx context.Context, contractClient *contract.ContractI
 
                 // Launch goroutine to publish the message asynchronously
                 go func(payload []byte, dataName string, deps [][32]byte, seqNum int) {
-                    fmt.Println("Publishing message..., time: ", time.Now())
                     err := contractClient.Upload(string(payload), *instanceID, dataName, deps)
                     if err != nil {
                         logJSON(map[string]any{
@@ -333,14 +329,12 @@ func getEnvBool(key string, defaultVal bool) bool {
 
 // main – modified to include results logging to file
 func main() {
-	fmt.Println("Starting the application...")
 	flag.Parse()
 	runStartTime = time.Now()
 
 	// Set GOMAXPROCS to use all available cores
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
-	fmt.Printf("Using %d CPU cores\n", numCPU)
 
 	// Set up logging to file
 	setupLogging()
