@@ -8,6 +8,8 @@
 *.so
 *.dylib
 *.env
+*.env.high_throughput
+*.high_throughput
 
 # Test binary, built with `go test -c`
 *.test
