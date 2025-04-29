@@ -9,14 +9,14 @@ import "@nomicfoundation/hardhat-chai-matchers";
 
 const config: HardhatUserConfig = {
   solidity: {
-    compilers: [
-      {
-        version: "0.8.28", // For Lock.sol
+    version: "0.8.19",
+    settings: {
+      viaIR: true,
+      optimizer: {
+        enabled: true,
+        runs: 200,
       },
-      {
-        version: "0.8.19", // For Master.sol
-      },
-    ],
+    },
   },
   networks: {
     fuji: {
