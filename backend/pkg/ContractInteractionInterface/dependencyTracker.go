@@ -107,58 +107,55 @@ func (dt *DependencyTracker) IsConfirmed(messageHash [32]byte) bool {
 	return dt.confirmedMessages[messageHash]
 }
 
-// ConfirmMessage marks a message as confirmed and processes dependent messages
-func (dt *DependencyTracker) ConfirmMessage(messageHash [32]byte) {
-	fmt.Printf("Confirming message: %x\n", messageHash)
+// ConfirmMessage marks a message as confirmed and replays any waiting messages.
+func (dt *DependencyTracker) ConfirmMessage(mHash [32]byte) {
+
+	// 1) atomically pull out and delete that queue
 	dt.mu.Lock()
-	defer dt.mu.Unlock()
+	dt.confirmedMessages[mHash] = true
+	waiting := dt.waitingOn[mHash]
+	delete(dt.waitingOn, mHash)
+	dt.mu.Unlock()
 
-	// Mark this message as confirmed
-	dt.confirmedMessages[messageHash] = true
-
-	// Get messages waiting for this dependency
-	waitingMsgs, exists := dt.waitingOn[messageHash]
-	if !exists {
-		return
-	}
-
-	// Remove this dependency from the waiting list
-	delete(dt.waitingOn, messageHash)
-
-	for _, msg := range waitingMsgs {
-		allConfirmed := true
-		var stillMissingDeps [][32]byte
-
-		for _, dep := range msg.Dependencies {
-			if !dt.confirmedMessages[dep] {
-				allConfirmed = false
-				stillMissingDeps = append(stillMissingDeps, dep)
-			}
-		}
-
-		if allConfirmed {
-			// Publish immediately because all dependencies are now confirmed
-			go func(m PendingMessage) {
-				payloadBytes := []byte(m.Data)
-				input, err := dt.contract.GetPackedInput(m.Data, m.Owner, m.DataName, m.Dependencies...)
+	// 2) for each waiting message, check all its deps
+	for _, msg := range waiting {
+		if dt.allDepsConfirmed(msg.Dependencies) {
+			go func(pm PendingMessage) {
+				payload := []byte(pm.Data)
+				input, err := dt.contract.GetPackedInput(pm.Data, pm.Owner, pm.DataName, pm.Dependencies...)
 				if err != nil {
-					log.Printf("Error packing input for message %s: %v", m.DataName, err)
+					log.Printf("packing queued %s: %v", pm.DataName, err)
 					return
 				}
-				err = dt.contract.Upload(payloadBytes, m.Owner, m.DataName, 0, m.Dependencies, input)
-				if err != nil {
-					log.Printf("Error publishing queued message %s: %v", m.DataName, err)
+				if err := dt.contract.Upload(payload, pm.Owner, pm.DataName, 0, pm.Dependencies, input); err != nil {
+					log.Printf("publishing queued %s: %v", pm.DataName, err)
 				} else {
-					log.Printf("Published previously queued message: %s", m.DataName)
+					log.Printf("Published queued %s", pm.DataName)
 				}
 			}(msg)
 		} else {
-			// Still missing other dependencies, requeue
-			for _, dep := range stillMissingDeps {
-				dt.waitingOn[dep] = append(dt.waitingOn[dep], msg)
+			// still missing some deps → requeue under only those
+			dt.mu.Lock()
+			for _, dep := range msg.Dependencies {
+				if !dt.confirmedMessages[dep] {
+					dt.waitingOn[dep] = append(dt.waitingOn[dep], msg)
+				}
 			}
+			dt.mu.Unlock()
 		}
 	}
+}
+
+// R-locked helper
+func (dt *DependencyTracker) allDepsConfirmed(deps [][32]byte) bool {
+	dt.mu.RLock()
+	defer dt.mu.RUnlock()
+	for _, d := range deps {
+		if !dt.confirmedMessages[d] {
+			return false
+		}
+	}
+	return true
 }
 
 // periodicCleanup runs cleanup and retry logic periodically

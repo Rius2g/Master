@@ -1,97 +1,473 @@
-2025/04/29 18:33:42 Initializing contract interaction…
-2025/04/29 18:33:42 Retrieving current data ID...
-2025/04/29 18:33:42 Input data: [3 247 176 8]
-2025/04/29 18:33:42 Contract address: 0x6f8B45C6676591d3D08bF91176945e2DfAb13735
-2025/04/29 18:33:42 Private key: 5ffaf17e7dd289087fccddfa8ffad5060d3fe8b5f26c090db9660e8bc4439451
-2025/04/29 18:33:42 Client: &{0x140001486c0}
-2025/04/29 18:33:42 Context: context.Background.WithDeadline(2025-04-29 18:33:57.858584 +0200 CEST m=+15.597732876 [14.999755667s])
-2025/04/29 18:33:43 {"event":"contract_initialized","node":"1","timestamp":"2025-04-29T18:33:43.412366+02:00"}
-2025/04/29 18:33:58 Initializing contract interaction…
-2025/04/29 18:33:58 Initializing contract interaction…
-2025/04/29 18:33:58 Initializing contract interaction…
-2025/04/29 18:33:58 Initializing contract interaction…
-2025/04/29 18:33:58 Initializing contract interaction…
-2025/04/29 18:33:58 Retrieving current data ID...
-2025/04/29 18:33:58 Input data: [3 247 176 8]
-2025/04/29 18:33:58 Contract address: 0x6f8B45C6676591d3D08bF91176945e2DfAb13735
-2025/04/29 18:33:58 Private key: 5ffaf17e7dd289087fccddfa8ffad5060d3fe8b5f26c090db9660e8bc4439451
-2025/04/29 18:33:58 Client: &{0x140001b8510}
-2025/04/29 18:33:58 Context: context.Background.WithDeadline(2025-04-29 18:34:13.959908 +0200 CEST m=+15.295441043 [14.999644917s])
-2025/04/29 18:33:59 Retrieving current data ID...
-2025/04/29 18:33:59 Input data: [3 247 176 8]
-2025/04/29 18:33:59 Contract address: 0x6f8B45C6676591d3D08bF91176945e2DfAb13735
-2025/04/29 18:33:59 Private key: 5ffaf17e7dd289087fccddfa8ffad5060d3fe8b5f26c090db9660e8bc4439451
-2025/04/29 18:33:59 Client: &{0x14000242510}
-2025/04/29 18:33:59 Context: context.Background.WithDeadline(2025-04-29 18:34:14.230744 +0200 CEST m=+15.565983668 [14.999642334s])
-2025/04/29 18:33:59 Retrieving current data ID...
-2025/04/29 18:33:59 Input data: [3 247 176 8]
-2025/04/29 18:33:59 Contract address: 0x6f8B45C6676591d3D08bF91176945e2DfAb13735
-2025/04/29 18:33:59 Private key: 5ffaf17e7dd289087fccddfa8ffad5060d3fe8b5f26c090db9660e8bc4439451
-2025/04/29 18:33:59 Client: &{0x14000230510}
-2025/04/29 18:33:59 Context: context.Background.WithDeadline(2025-04-29 18:34:14.266159 +0200 CEST m=+15.601143042 [14.999603041s])
-2025/04/29 18:33:59 Retrieving current data ID...
-2025/04/29 18:33:59 Input data: [3 247 176 8]
-2025/04/29 18:33:59 Contract address: 0x6f8B45C6676591d3D08bF91176945e2DfAb13735
-2025/04/29 18:33:59 Private key: 5ffaf17e7dd289087fccddfa8ffad5060d3fe8b5f26c090db9660e8bc4439451
-2025/04/29 18:33:59 Client: &{0x140002b0510}
-2025/04/29 18:33:59 Context: context.Background.WithDeadline(2025-04-29 18:34:14.285487 +0200 CEST m=+15.620838043 [14.999710584s])
-2025/04/29 18:33:59 Retrieving current data ID...
-2025/04/29 18:33:59 Input data: [3 247 176 8]
-2025/04/29 18:33:59 Contract address: 0x6f8B45C6676591d3D08bF91176945e2DfAb13735
-2025/04/29 18:33:59 Private key: 5ffaf17e7dd289087fccddfa8ffad5060d3fe8b5f26c090db9660e8bc4439451
-2025/04/29 18:33:59 Client: &{0x140001746c0}
-2025/04/29 18:33:59 Context: context.Background.WithDeadline(2025-04-29 18:34:14.472691 +0200 CEST m=+15.808162043 [14.999784958s])
-2025/04/29 18:33:59 {"event":"contract_initialized","node":"5","timestamp":"2025-04-29T18:33:59.474574+02:00"}
-2025/04/29 18:33:59 {"event":"contract_initialized","node":"3","timestamp":"2025-04-29T18:33:59.515688+02:00"}
-2025/04/29 18:33:59 {"event":"contract_initialized","node":"1","timestamp":"2025-04-29T18:33:59.522521+02:00"}
-2025/04/29 18:33:59 {"event":"contract_initialized","node":"4","timestamp":"2025-04-29T18:33:59.533572+02:00"}
-2025/04/29 18:33:59 {"event":"contract_initialized","node":"2","timestamp":"2025-04-29T18:33:59.724508+02:00"}
-2025/04/29 18:34:00 {"event":"message_processor_initialized","node":"1","timestamp":"2025-04-29T18:34:00.192899+02:00"}
-2025/04/29 18:34:00 {"event":"message_processor_initialized","node":"4","timestamp":"2025-04-29T18:34:00.195889+02:00"}
-2025/04/29 18:34:00 {"event":"message_processor_initialized","node":"5","timestamp":"2025-04-29T18:34:00.211337+02:00"}
-2025/04/29 18:34:00 {"event":"message_processor_initialized","node":"3","timestamp":"2025-04-29T18:34:00.371553+02:00"}
-2025/04/29 18:34:00 {"event":"message_processor_initialized","node":"2","timestamp":"2025-04-29T18:34:00.535118+02:00"}
-2025/04/29 18:34:00 Transaction sent: 0x00900efd87d046aa8fd1025f304d8bf0fece6823d470c3b34e968186c1e8d615 with nonce 7602
-2025/04/29 18:34:00 Stored transaction hash 0x00900efd87d046aa8fd1025f304d8bf0fece6823d470c3b34e968186c1e8d615 with message hash 1047dcbdb565797f65d13dc2d2d13a5e3539cfc629da6bba5663d9784326e8ef
-2025/04/29 18:34:00 Confirmed message hash 1047dcbdb565797f65d13dc2d2d13a5e3539cfc629da6bba5663d9784326e8ef
-2025/04/29 18:34:00 Message published successfully: 4-1
-2025/04/29 18:34:00 [Publisher] Successfully uploaded seq 2 (took 520.626166ms)
-2025/04/29 18:34:00 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"4","seq":2,"timestamp":"2025-04-29T18:34:00.717149+02:00"}
-2025/04/29 18:34:00 Nonce error detected: replacement transaction underpriced, attempting to resync nonce
-2025/04/29 18:34:00 Transaction sent: 0x5c5f1d67fb5d1dcd828f568d6243f1bfdeb1126d05e25241bb35f02d6ff01a09 with nonce 7602
-2025/04/29 18:34:00 Stored transaction hash 0x5c5f1d67fb5d1dcd828f568d6243f1bfdeb1126d05e25241bb35f02d6ff01a09 with message hash ae64890f4fec23b389e7b888d861f21db7518fa3a27c50b017dddcdfb03c50df
-2025/04/29 18:34:00 Confirmed message hash ae64890f4fec23b389e7b888d861f21db7518fa3a27c50b017dddcdfb03c50df
-2025/04/29 18:34:00 Message published successfully: 1-1
-2025/04/29 18:34:00 [Publisher] Successfully uploaded seq 2 (took 743.704291ms)
-2025/04/29 18:34:00 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"1","seq":2,"timestamp":"2025-04-29T18:34:00.93757+02:00"}
-2025/04/29 18:34:00 Transaction sent: 0xb0a00d726c8ce63f3baf22d4ca6e239dd8b136503253408f5098e7425371193d with nonce 7602
-2025/04/29 18:34:00 Stored transaction hash 0xb0a00d726c8ce63f3baf22d4ca6e239dd8b136503253408f5098e7425371193d with message hash 434def1ce60eede14f8de1cce41f54ee194d06d45c09c3a3f9e354b93b47e982
-2025/04/29 18:34:00 Confirmed message hash 434def1ce60eede14f8de1cce41f54ee194d06d45c09c3a3f9e354b93b47e982
-2025/04/29 18:34:00 Message published successfully: 2-1
-2025/04/29 18:34:00 [Publisher] Successfully uploaded seq 2 (took 406.361666ms)
-2025/04/29 18:34:00 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"2","seq":2,"timestamp":"2025-04-29T18:34:00.942395+02:00"}
-2025/04/29 18:34:01 Nonce error detected: replacement transaction underpriced, attempting to resync nonce
-2025/04/29 18:34:01 Resynced nonce for 0x0d5cE0AFd690DD504dCA7BeF9FEAbCC3b7c6A2b4 to 7603
-2025/04/29 18:34:01 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"4","seq":2,"timestamp":"2025-04-29T18:34:01.218189+02:00"}
-2025/04/29 18:34:01 Resynced nonce for 0x0d5cE0AFd690DD504dCA7BeF9FEAbCC3b7c6A2b4 to 7603
-2025/04/29 18:34:01 Retry transaction sent successfully with nonce 7603: 0x96d3187a056aabe293745d918c549b24230ab1141f2db93ca9a1980ccb26f8dd
-2025/04/29 18:34:01 Message published successfully: 5-1
-2025/04/29 18:34:01 [Publisher] Successfully uploaded seq 2 (took 1.140213709s)
-2025/04/29 18:34:01 {"error":"dependency not confirmed, message queued","event":"publish_error","node":"5","seq":2,"timestamp":"2025-04-29T18:34:01.352359+02:00"}
-2025/04/29 18:34:01 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"1","seq":2,"timestamp":"2025-04-29T18:34:01.438978+02:00"}
-2025/04/29 18:34:01 Retry transaction sent successfully with nonce 7603: 0xa637aae5503795aaf44e15f69308ebc19dd09c4ad5cc63aa756ee7bffc37c442
-2025/04/29 18:34:01 Message published successfully: 3-1
-2025/04/29 18:34:01 [Publisher] Successfully uploaded seq 2 (took 1.068897833s)
-2025/04/29 18:34:01 {"error":"dependency not confirmed, message queued","event":"publish_error","node":"3","seq":2,"timestamp":"2025-04-29T18:34:01.441183+02:00"}
-2025/04/29 18:34:01 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"2","seq":2,"timestamp":"2025-04-29T18:34:01.442653+02:00"}
-2025/04/29 18:34:01 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"4","seq":2,"timestamp":"2025-04-29T18:34:01.719814+02:00"}
-2025/04/29 18:34:01 {"error":"dependency not confirmed, message queued","event":"publish_error","node":"5","seq":2,"timestamp":"2025-04-29T18:34:01.853671+02:00"}
-2025/04/29 18:34:01 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"1","seq":2,"timestamp":"2025-04-29T18:34:01.940357+02:00"}
-2025/04/29 18:34:01 {"error":"dependency not confirmed, message queued","event":"publish_error","node":"3","seq":2,"timestamp":"2025-04-29T18:34:01.942398+02:00"}
-2025/04/29 18:34:01 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"2","seq":2,"timestamp":"2025-04-29T18:34:01.943928+02:00"}
-2025/04/29 18:34:02 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"4","seq":2,"timestamp":"2025-04-29T18:34:02.221379+02:00"}
-2025/04/29 18:34:02 {"error":"dependency not confirmed, message queued","event":"publish_error","node":"5","seq":2,"timestamp":"2025-04-29T18:34:02.355378+02:00"}
-2025/04/29 18:34:02 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"1","seq":2,"timestamp":"2025-04-29T18:34:02.440871+02:00"}
-2025/04/29 18:34:02 {"error":"dependency not confirmed, message queued","event":"publish_error","node":"3","seq":2,"timestamp":"2025-04-29T18:34:02.442778+02:00"}
-2025/04/29 18:34:02 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"2","seq":2,"timestamp":"2025-04-29T18:34:02.445228+02:00"}
-2025/04/29 18:34:02 {"error":"failed to pack input data: method 'getDependencyTimestamps' not found","event":"publish_error","node":"4","seq":2,"timestamp":"2025-04-29T18:34:02.722883+02:00"}
+2025/04/30 09:28:32 Initializing contract interaction…
+2025/04/30 09:28:32 Retrieving current data ID...
+2025/04/30 09:28:33 {"event":"contract_initialized","node":"1","timestamp":"2025-04-30T09:28:33.101551+02:00"}
+2025/04/30 09:28:33 newHeads watcher started
+2025/04/30 09:28:33 {"event":"message_processor_initialized","node":"1","timestamp":"2025-04-30T09:28:33.720074+02:00"}
+2025/04/30 09:28:34 Transaction sent: 0x353d9f863e1d837e0b8d29a5b1075564690df3202be13d4cebcc4160b20dd42e with nonce 7882
+2025/04/30 09:28:34 Stored transaction hash 0x353d9f863e1d837e0b8d29a5b1075564690df3202be13d4cebcc4160b20dd42e with message hash 92d72a7213340d52c58eeb8fbaa2bced2f5018e5f6234f9b58655952d20c1c9a
+2025/04/30 09:28:34 Confirmed message hash 92d72a7213340d52c58eeb8fbaa2bced2f5018e5f6234f9b58655952d20c1c9a
+2025/04/30 09:28:34 Message published successfully: 1-2-1
+2025/04/30 09:28:34 [pub 2] uploaded seq 1 (took 293.600125ms)
+2025/04/30 09:28:34 Transaction sent: 0xfbe29da7af6aa8df36322cb39fad8e0577e444583a33441dba79ae70cedc73d2 with nonce 7883
+2025/04/30 09:28:34 Stored transaction hash 0xfbe29da7af6aa8df36322cb39fad8e0577e444583a33441dba79ae70cedc73d2 with message hash c3fca5ef816570e11f854220060161aec57265243f1fcc8ca62c95069fae5077
+2025/04/30 09:28:34 Confirmed message hash c3fca5ef816570e11f854220060161aec57265243f1fcc8ca62c95069fae5077
+2025/04/30 09:28:34 Message published successfully: 1-3-1
+2025/04/30 09:28:34 [pub 3] uploaded seq 1 (took 628.288084ms)
+2025/04/30 09:28:34 Transaction sent: 0x3f343bb54536e5cb7db4aef758aef48824f85ff5e08bf68ba790a034b618f0ea with nonce 7884
+2025/04/30 09:28:34 Stored transaction hash 0x3f343bb54536e5cb7db4aef758aef48824f85ff5e08bf68ba790a034b618f0ea with message hash 8bca2107619882e300461c6af26853f916d338d97576f565ae10a6a5bc84a45f
+2025/04/30 09:28:34 Confirmed message hash 8bca2107619882e300461c6af26853f916d338d97576f565ae10a6a5bc84a45f
+2025/04/30 09:28:34 Message published successfully: 1-1-1
+2025/04/30 09:28:34 [pub 1] uploaded seq 1 (took 943.715542ms)
+2025/04/30 09:28:34 Transaction sent: 0x82ea44c7225f6e8858d70b1e7a3b549155b5cdc12b969387353ba8778831f62a with nonce 7885
+2025/04/30 09:28:34 Stored transaction hash 0x82ea44c7225f6e8858d70b1e7a3b549155b5cdc12b969387353ba8778831f62a with message hash 53d8aabe70127edf0968b9bd35acfccd528cd0c73ad347a02a54da1101a4b7f7
+2025/04/30 09:28:34 Confirmed message hash 53d8aabe70127edf0968b9bd35acfccd528cd0c73ad347a02a54da1101a4b7f7
+2025/04/30 09:28:34 Message published successfully: 1-4-1
+2025/04/30 09:28:34 [pub 4] uploaded seq 1 (took 1.247007291s)
+2025/04/30 09:28:36 {"confirmed":1,"event":"tx_confirmed","node":"1","seq":1,"timestamp":"2025-04-30T09:28:36.537163+02:00"}
+2025/04/30 09:28:36 {"confirmed":2,"event":"tx_confirmed","node":"1","seq":1,"timestamp":"2025-04-30T09:28:36.537298+02:00"}
+2025/04/30 09:28:36 {"confirmed":3,"event":"tx_confirmed","node":"1","seq":1,"timestamp":"2025-04-30T09:28:36.537339+02:00"}
+2025/04/30 09:28:36 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:33.722673+02:00","publisherID":3,"seq":1} 2025-04-30 09:28:35 +0200 CEST 253 1 1-3-1 []}
+2025/04/30 09:28:36 {"data_name":"1-3-1","event":"message_latency","latency_ms":2865,"sender":"1","timestamp":"2025-04-30T09:28:36.588629+02:00"}
+2025/04/30 09:28:36 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:33.722843+02:00","publisherID":1,"seq":1} 2025-04-30 09:28:35 +0200 CEST 254 1 1-1-1 []}
+2025/04/30 09:28:36 {"data_name":"1-1-1","event":"message_latency","latency_ms":2923,"sender":"1","timestamp":"2025-04-30T09:28:36.64616+02:00"}
+2025/04/30 09:28:36 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:33.722694+02:00","publisherID":2,"seq":1} 2025-04-30 09:28:35 +0200 CEST 252 1 1-2-1 []}
+2025/04/30 09:28:36 {"data_name":"1-2-1","event":"message_latency","latency_ms":2923,"sender":"1","timestamp":"2025-04-30T09:28:36.646254+02:00"}
+2025/04/30 09:28:36 Transaction sent: 0x06c73c6db6db955cf910c1e08349d577136384a38e47e4a951364fbd49ab5a28 with nonce 7886
+2025/04/30 09:28:36 Stored transaction hash 0x06c73c6db6db955cf910c1e08349d577136384a38e47e4a951364fbd49ab5a28 with message hash 43e1369653e39b16d9c1e5f6417689054a4af57b8fd281cc0e1e26328506b388
+2025/04/30 09:28:36 Confirmed message hash 43e1369653e39b16d9c1e5f6417689054a4af57b8fd281cc0e1e26328506b388
+2025/04/30 09:28:36 Message published successfully: 1-3-2
+2025/04/30 09:28:36 [pub 3] uploaded seq 2 (took 467.408083ms)
+2025/04/30 09:28:37 Transaction sent: 0x66999cf90cfd03b89a4e2a0b353bb76f9f36528e832eee74da0d07f8718f4f68 with nonce 7887
+2025/04/30 09:28:37 Stored transaction hash 0x66999cf90cfd03b89a4e2a0b353bb76f9f36528e832eee74da0d07f8718f4f68 with message hash aa6f6b84cbc1afcff5ae5e4de536f8ace341386959b22254c1550e5a82a90505
+2025/04/30 09:28:37 Confirmed message hash aa6f6b84cbc1afcff5ae5e4de536f8ace341386959b22254c1550e5a82a90505
+2025/04/30 09:28:37 Message published successfully: 1-1-2
+2025/04/30 09:28:37 [pub 1] uploaded seq 2 (took 768.591625ms)
+2025/04/30 09:28:37 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:33.722701+02:00","publisherID":4,"seq":1} 2025-04-30 09:28:36 +0200 CEST 255 1 1-4-1 []}
+2025/04/30 09:28:37 {"data_name":"1-4-1","event":"message_latency","latency_ms":3544,"sender":"1","timestamp":"2025-04-30T09:28:37.266882+02:00"}
+2025/04/30 09:28:37 {"confirmed":4,"event":"tx_confirmed","node":"1","seq":1,"timestamp":"2025-04-30T09:28:37.293363+02:00"}
+2025/04/30 09:28:37 Transaction sent: 0x05534e10b7faad6b5fef53498f92b538aab7d3fcee89c6cf953dbd5000234f2e with nonce 7888
+2025/04/30 09:28:37 Stored transaction hash 0x05534e10b7faad6b5fef53498f92b538aab7d3fcee89c6cf953dbd5000234f2e with message hash 7333b3d397abd9491f7dc29226efa75d083512712dfd48c495c7cffc75a22713
+2025/04/30 09:28:37 Confirmed message hash 7333b3d397abd9491f7dc29226efa75d083512712dfd48c495c7cffc75a22713
+2025/04/30 09:28:37 Message published successfully: 1-2-2
+2025/04/30 09:28:37 [pub 2] uploaded seq 2 (took 1.057206625s)
+2025/04/30 09:28:37 Transaction sent: 0x48c312d98e5ad9f90068e2c5c5359cbebe6fe254518003e415067fa510748eba with nonce 7889
+2025/04/30 09:28:37 Stored transaction hash 0x48c312d98e5ad9f90068e2c5c5359cbebe6fe254518003e415067fa510748eba with message hash 82d090f5041bbe78c295a77ef7d99d9d17b4128205fb6537f3ce11c03912e535
+2025/04/30 09:28:37 Confirmed message hash 82d090f5041bbe78c295a77ef7d99d9d17b4128205fb6537f3ce11c03912e535
+2025/04/30 09:28:37 Message published successfully: 1-4-2
+2025/04/30 09:28:37 [pub 4] uploaded seq 2 (took 618.092541ms)
+2025/04/30 09:28:38 {"confirmed":5,"event":"tx_confirmed","node":"1","seq":2,"timestamp":"2025-04-30T09:28:38.431324+02:00"}
+2025/04/30 09:28:38 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:36.36045+02:00","publisherID":3,"seq":2} 2025-04-30 09:28:37 +0200 CEST 256 1 1-3-2 [[195 252 165 239 129 101 112 225 31 133 66 32 6 1 97 174 197 114 101 36 63 31 204 140 166 44 149 6 159 174 80 119]]}
+2025/04/30 09:28:38 {"data_name":"1-3-2","event":"message_latency","latency_ms":2179,"sender":"1","timestamp":"2025-04-30T09:28:38.540011+02:00"}
+2025/04/30 09:28:38 Transaction sent: 0xd60c61e11af8dd0f1f227693dc25718c2ce2455779bd0fb23390731f4e153a00 with nonce 7890
+2025/04/30 09:28:38 Stored transaction hash 0xd60c61e11af8dd0f1f227693dc25718c2ce2455779bd0fb23390731f4e153a00 with message hash 46f6463cd98420b841f8ea4969ac2632fceaa6098f4d01f84398e3d65538aeaf
+2025/04/30 09:28:38 Confirmed message hash 46f6463cd98420b841f8ea4969ac2632fceaa6098f4d01f84398e3d65538aeaf
+2025/04/30 09:28:38 Message published successfully: 1-3-3
+2025/04/30 09:28:38 [pub 3] uploaded seq 3 (took 437.340792ms)
+2025/04/30 09:28:40 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:36.373765+02:00","publisherID":2,"seq":2} 2025-04-30 09:28:38 +0200 CEST 258 1 1-2-2 [[146 215 42 114 19 52 13 82 197 142 235 143 186 162 188 237 47 80 24 229 246 35 79 155 88 101 89 82 210 12 28 154]]}
+2025/04/30 09:28:40 {"data_name":"1-2-2","event":"message_latency","latency_ms":3808,"sender":"1","timestamp":"2025-04-30T09:28:40.182453+02:00"}
+2025/04/30 09:28:40 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:37.128772+02:00","publisherID":4,"seq":2} 2025-04-30 09:28:38 +0200 CEST 259 1 1-4-2 [[83 216 170 190 112 18 126 223 9 104 185 189 53 172 252 205 82 140 208 199 58 211 71 160 42 84 218 17 1 164 183 247]]}
+2025/04/30 09:28:40 {"data_name":"1-4-2","event":"message_latency","latency_ms":3053,"sender":"1","timestamp":"2025-04-30T09:28:40.182586+02:00"}
+2025/04/30 09:28:40 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:36.360449+02:00","publisherID":1,"seq":2} 2025-04-30 09:28:38 +0200 CEST 257 1 1-1-2 [[139 202 33 7 97 152 130 227 0 70 28 106 242 104 83 249 22 211 56 217 117 118 245 101 174 16 166 165 188 132 164 95]]}
+2025/04/30 09:28:40 {"data_name":"1-1-2","event":"message_latency","latency_ms":3822,"sender":"1","timestamp":"2025-04-30T09:28:40.18267+02:00"}
+2025/04/30 09:28:40 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:38.179439+02:00","publisherID":3,"seq":3} 2025-04-30 09:28:38 +0200 CEST 260 1 1-3-3 [[67 225 54 150 83 227 155 22 217 193 229 246 65 118 137 5 74 74 245 123 143 210 129 204 14 30 38 50 133 6 179 136]]}
+2025/04/30 09:28:40 {"data_name":"1-3-3","event":"message_latency","latency_ms":2009,"sender":"1","timestamp":"2025-04-30T09:28:40.18857+02:00"}
+2025/04/30 09:28:40 {"confirmed":6,"event":"tx_confirmed","node":"1","seq":3,"timestamp":"2025-04-30T09:28:40.29401+02:00"}
+2025/04/30 09:28:40 {"confirmed":7,"event":"tx_confirmed","node":"1","seq":2,"timestamp":"2025-04-30T09:28:40.294203+02:00"}
+2025/04/30 09:28:40 {"confirmed":8,"event":"tx_confirmed","node":"1","seq":2,"timestamp":"2025-04-30T09:28:40.294235+02:00"}
+2025/04/30 09:28:40 {"confirmed":9,"event":"tx_confirmed","node":"1","seq":2,"timestamp":"2025-04-30T09:28:40.294266+02:00"}
+2025/04/30 09:28:40 Transaction sent: 0x6e0254cc8d0bc8e7f632b74e6954e64aa1f8915f82148ad8af64460657ae93df with nonce 7891
+2025/04/30 09:28:40 Stored transaction hash 0x6e0254cc8d0bc8e7f632b74e6954e64aa1f8915f82148ad8af64460657ae93df with message hash 3d1febf057d42d7b482848cf9e966df176496d843b3ef0c1e2c030e926461ed1
+2025/04/30 09:28:40 Confirmed message hash 3d1febf057d42d7b482848cf9e966df176496d843b3ef0c1e2c030e926461ed1
+2025/04/30 09:28:40 Message published successfully: 1-1-3
+2025/04/30 09:28:40 [pub 1] uploaded seq 3 (took 463.600792ms)
+2025/04/30 09:28:40 Transaction sent: 0x3e823e07cfa72fb3b1802f0a5213e76c3abbeaf5c2298d029a14d871385b0da9 with nonce 7892
+2025/04/30 09:28:40 Stored transaction hash 0x3e823e07cfa72fb3b1802f0a5213e76c3abbeaf5c2298d029a14d871385b0da9 with message hash 92ed114d54ae39f8e379b96a14302c47bee2677bcd3a1a03ce7ed64fdd628163
+2025/04/30 09:28:40 Confirmed message hash 92ed114d54ae39f8e379b96a14302c47bee2677bcd3a1a03ce7ed64fdd628163
+2025/04/30 09:28:40 Message published successfully: 1-2-3
+2025/04/30 09:28:40 [pub 2] uploaded seq 3 (took 783.443417ms)
+2025/04/30 09:28:41 Transaction sent: 0xe5b46b1f48c4f845f1a00b8f51da1b3926ac0d2fac4aaa6a6d57d273da1af474 with nonce 7893
+2025/04/30 09:28:41 Stored transaction hash 0xe5b46b1f48c4f845f1a00b8f51da1b3926ac0d2fac4aaa6a6d57d273da1af474 with message hash 7fef9ccc619f754dc07fd60ebcfba486cb6dd83091d50fb40674e5d2a007db25
+2025/04/30 09:28:41 Confirmed message hash 7fef9ccc619f754dc07fd60ebcfba486cb6dd83091d50fb40674e5d2a007db25
+2025/04/30 09:28:41 Message published successfully: 1-3-4
+2025/04/30 09:28:41 [pub 3] uploaded seq 4 (took 1.07913675s)
+2025/04/30 09:28:41 Transaction sent: 0x48f9758d403e351fcee81ab553245d2e6e835c3a86042a9475840821243be4d7 with nonce 7894
+2025/04/30 09:28:41 Stored transaction hash 0x48f9758d403e351fcee81ab553245d2e6e835c3a86042a9475840821243be4d7 with message hash 6d1070a5b3952ee636250fe28aca4ab8cc34840b5b96230e0f7f6660cf3c8c41
+2025/04/30 09:28:41 Confirmed message hash 6d1070a5b3952ee636250fe28aca4ab8cc34840b5b96230e0f7f6660cf3c8c41
+2025/04/30 09:28:41 Message published successfully: 1-4-3
+2025/04/30 09:28:41 [pub 4] uploaded seq 3 (took 1.366343583s)
+2025/04/30 09:28:42 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:40.026327+02:00","publisherID":1,"seq":3} 2025-04-30 09:28:40 +0200 CEST 261 1 1-1-3 [[170 111 107 132 203 193 175 207 245 174 94 77 229 54 248 172 227 65 56 105 89 178 34 84 193 85 14 90 130 169 5 5]]}
+2025/04/30 09:28:42 {"data_name":"1-1-3","event":"message_latency","latency_ms":2669,"sender":"1","timestamp":"2025-04-30T09:28:42.695543+02:00"}
+2025/04/30 09:28:42 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:40.027774+02:00","publisherID":2,"seq":3} 2025-04-30 09:28:40 +0200 CEST 262 1 1-2-3 [[115 51 179 211 151 171 217 73 31 125 194 146 38 239 167 93 8 53 18 113 45 253 72 196 149 199 207 252 117 162 39 19]]}
+2025/04/30 09:28:42 {"data_name":"1-2-3","event":"message_latency","latency_ms":2667,"sender":"1","timestamp":"2025-04-30T09:28:42.695652+02:00"}
+2025/04/30 09:28:42 {"confirmed":10,"event":"tx_confirmed","node":"1","seq":3,"timestamp":"2025-04-30T09:28:42.838561+02:00"}
+2025/04/30 09:28:42 {"confirmed":11,"event":"tx_confirmed","node":"1","seq":3,"timestamp":"2025-04-30T09:28:42.838703+02:00"}
+2025/04/30 09:28:43 Transaction sent: 0xcee844ef7b2a35afc225207509767d357fbe340aa0d3b986da75c61508be1cc5 with nonce 7895
+2025/04/30 09:28:43 Stored transaction hash 0xcee844ef7b2a35afc225207509767d357fbe340aa0d3b986da75c61508be1cc5 with message hash 72d994f05c5c0f17163bb53da8b3e2e1dba4128de180e4aa75ed5d3870469a88
+2025/04/30 09:28:43 Confirmed message hash 72d994f05c5c0f17163bb53da8b3e2e1dba4128de180e4aa75ed5d3870469a88
+2025/04/30 09:28:43 Message published successfully: 1-1-4
+2025/04/30 09:28:43 [pub 1] uploaded seq 4 (took 457.7925ms)
+2025/04/30 09:28:43 Transaction sent: 0xe4353077dca5eb4a8098d01a14b76d7c9b9167143b74ca19cb9e695c4a508831 with nonce 7896
+2025/04/30 09:28:43 Stored transaction hash 0xe4353077dca5eb4a8098d01a14b76d7c9b9167143b74ca19cb9e695c4a508831 with message hash 37d40ca25cd0b127ce4e1042c011e96acd355232f6772a91c4424559b73f2819
+2025/04/30 09:28:43 Confirmed message hash 37d40ca25cd0b127ce4e1042c011e96acd355232f6772a91c4424559b73f2819
+2025/04/30 09:28:43 Message published successfully: 1-2-4
+2025/04/30 09:28:43 [pub 2] uploaded seq 4 (took 788.440292ms)
+2025/04/30 09:28:43 {"elapsed_seconds":11.543721958999999,"event":"periodic_stats","messages_per_sec":1.0999986707616063,"messages_sent":15,"node":"1","timestamp":"2025-04-30T09:28:43.720509+02:00","total_messages":11}
+2025/04/30 09:28:43 {"event":"node_processing_stats","interval_msgs_per_sec":1.0999408689387913,"messages_per_sec":1.0999408506807546,"messages_processed":11,"timestamp":"2025-04-30T09:28:43.720508+02:00","uptime_seconds":10.00053775}
+2025/04/30 09:28:45 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:40.045169+02:00","publisherID":4,"seq":3} 2025-04-30 09:28:43 +0200 CEST 264 1 1-4-3 [[130 208 144 245 4 27 190 120 194 149 167 126 247 217 157 157 23 180 18 130 5 251 101 55 243 206 17 192 57 18 229 53]]}
+2025/04/30 09:28:45 {"data_name":"1-4-3","event":"message_latency","latency_ms":5037,"sender":"1","timestamp":"2025-04-30T09:28:45.082873+02:00"}
+2025/04/30 09:28:45 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:40.038186+02:00","publisherID":3,"seq":4} 2025-04-30 09:28:43 +0200 CEST 263 1 1-3-4 [[70 246 70 60 217 132 32 184 65 248 234 73 105 172 38 50 252 234 166 9 143 77 1 248 67 152 227 214 85 56 174 175]]}
+2025/04/30 09:28:45 {"data_name":"1-3-4","event":"message_latency","latency_ms":5044,"sender":"1","timestamp":"2025-04-30T09:28:45.082934+02:00"}
+2025/04/30 09:28:45 {"confirmed":12,"event":"tx_confirmed","node":"1","seq":4,"timestamp":"2025-04-30T09:28:45.102133+02:00"}
+2025/04/30 09:28:45 {"confirmed":13,"event":"tx_confirmed","node":"1","seq":4,"timestamp":"2025-04-30T09:28:45.102244+02:00"}
+2025/04/30 09:28:45 {"confirmed":14,"event":"tx_confirmed","node":"1","seq":3,"timestamp":"2025-04-30T09:28:45.102281+02:00"}
+2025/04/30 09:28:45 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:42.63076+02:00","publisherID":1,"seq":4} 2025-04-30 09:28:43 +0200 CEST 265 1 1-1-4 [[61 31 235 240 87 212 45 123 72 40 72 207 158 150 109 241 118 73 109 132 59 62 240 193 226 192 48 233 38 70 30 209]]}
+2025/04/30 09:28:45 {"data_name":"1-1-4","event":"message_latency","latency_ms":2475,"sender":"1","timestamp":"2025-04-30T09:28:45.105913+02:00"}
+2025/04/30 09:28:45 Transaction sent: 0xf4fb54168b8c185504a1dbc1a6bb5f6062ad01ca5e88b095ce922d80b0742594 with nonce 7897
+2025/04/30 09:28:45 Stored transaction hash 0xf4fb54168b8c185504a1dbc1a6bb5f6062ad01ca5e88b095ce922d80b0742594 with message hash 525eb5e645567db8e5605192442d949ee9ab6a053c56b3b548fa0791d4e572c2
+2025/04/30 09:28:45 Confirmed message hash 525eb5e645567db8e5605192442d949ee9ab6a053c56b3b548fa0791d4e572c2
+2025/04/30 09:28:45 Message published successfully: 1-3-5
+2025/04/30 09:28:45 [pub 3] uploaded seq 5 (took 479.4755ms)
+2025/04/30 09:28:45 Transaction sent: 0x1b636cde64beb133347ec71dcbcaa072df38722f9ae0eaf7b8da74b61a16a7a0 with nonce 7898
+2025/04/30 09:28:45 Stored transaction hash 0x1b636cde64beb133347ec71dcbcaa072df38722f9ae0eaf7b8da74b61a16a7a0 with message hash 9dc4487e2313f52b6005f0745fa5dd62f9e41c80d195f8c0a0c24890055c9e5c
+2025/04/30 09:28:45 Confirmed message hash 9dc4487e2313f52b6005f0745fa5dd62f9e41c80d195f8c0a0c24890055c9e5c
+2025/04/30 09:28:45 Message published successfully: 1-1-5
+2025/04/30 09:28:45 [pub 1] uploaded seq 5 (took 743.137125ms)
+2025/04/30 09:28:45 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:42.630708+02:00","publisherID":2,"seq":4} 2025-04-30 09:28:44 +0200 CEST 266 1 1-2-4 [[146 237 17 77 84 174 57 248 227 121 185 106 20 48 44 71 190 226 103 123 205 58 26 3 206 126 214 79 221 98 129 99]]}
+2025/04/30 09:28:45 {"confirmed":15,"event":"tx_confirmed","node":"1","seq":4,"timestamp":"2025-04-30T09:28:45.696719+02:00"}
+2025/04/30 09:28:45 {"data_name":"1-2-4","event":"message_latency","latency_ms":3066,"sender":"1","timestamp":"2025-04-30T09:28:45.69685+02:00"}
+2025/04/30 09:28:45 Transaction sent: 0x246afbbe63814dcb2fd30b3a3e9da138b8ad6cd8b7ffd6a4a541dfb3463e5a35 with nonce 7899
+2025/04/30 09:28:45 Stored transaction hash 0x246afbbe63814dcb2fd30b3a3e9da138b8ad6cd8b7ffd6a4a541dfb3463e5a35 with message hash 3933f426983c908b32faac2ffa4ca5c5205c1916cc32fc4bdcfd059de6a7d331
+2025/04/30 09:28:45 Confirmed message hash 3933f426983c908b32faac2ffa4ca5c5205c1916cc32fc4bdcfd059de6a7d331
+2025/04/30 09:28:45 Message published successfully: 1-4-4
+2025/04/30 09:28:45 [pub 4] uploaded seq 4 (took 1.037467166s)
+2025/04/30 09:28:46 Resynced nonce for 0x0d5cE0AFd690DD504dCA7BeF9FEAbCC3b7c6A2b4 to 7900
+2025/04/30 09:28:46 Transaction sent: 0x18fb1d981dfbb5688459477c3c8c7233bf5d8d61f1fbc75dba57176d7f28fb8d with nonce 7900
+2025/04/30 09:28:46 Stored transaction hash 0x18fb1d981dfbb5688459477c3c8c7233bf5d8d61f1fbc75dba57176d7f28fb8d with message hash c0147fabd313eca7952de56324aed7c4393ba6b18e354ebc275c7110008c2a91
+2025/04/30 09:28:46 Confirmed message hash c0147fabd313eca7952de56324aed7c4393ba6b18e354ebc275c7110008c2a91
+2025/04/30 09:28:46 Message published successfully: 1-2-5
+2025/04/30 09:28:46 [pub 2] uploaded seq 5 (took 700.844375ms)
+2025/04/30 09:28:47 {"confirmed":16,"event":"tx_confirmed","node":"1","seq":5,"timestamp":"2025-04-30T09:28:47.380323+02:00"}
+2025/04/30 09:28:47 {"confirmed":17,"event":"tx_confirmed","node":"1","seq":5,"timestamp":"2025-04-30T09:28:47.380436+02:00"}
+2025/04/30 09:28:47 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:44.894012+02:00","publisherID":1,"seq":5} 2025-04-30 09:28:46 +0200 CEST 268 1 1-1-5 [[114 217 148 240 92 92 15 23 22 59 181 61 168 179 226 225 219 164 18 141 225 128 228 170 117 237 93 56 112 70 154 136]]}
+2025/04/30 09:28:47 {"data_name":"1-1-5","event":"message_latency","latency_ms":2542,"sender":"1","timestamp":"2025-04-30T09:28:47.43685+02:00"}
+2025/04/30 09:28:47 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:44.821776+02:00","publisherID":3,"seq":5} 2025-04-30 09:28:46 +0200 CEST 267 1 1-3-5 [[127 239 156 204 97 159 117 77 192 127 214 14 188 251 164 134 203 109 216 48 145 213 15 180 6 116 229 210 160 7 219 37]]}
+2025/04/30 09:28:47 {"data_name":"1-3-5","event":"message_latency","latency_ms":2620,"sender":"1","timestamp":"2025-04-30T09:28:47.442557+02:00"}
+2025/04/30 09:28:47 Nonce error detected: replacement transaction underpriced, attempting to resync nonce
+2025/04/30 09:28:47 Resynced nonce for 0x0d5cE0AFd690DD504dCA7BeF9FEAbCC3b7c6A2b4 to 7901
+2025/04/30 09:28:47 Resynced nonce for 0x0d5cE0AFd690DD504dCA7BeF9FEAbCC3b7c6A2b4 to 7901
+2025/04/30 09:28:47 Retry transaction sent successfully with nonce 7901: 0x860c1c125ab297673fbaa41d86f7a5ee65040f95cd6d7e651189325e45231284
+2025/04/30 09:28:47 Message published successfully: 1-3-6
+2025/04/30 09:28:47 [pub 3] uploaded seq 6 (took 731.273167ms)
+2025/04/30 09:28:48 Transaction sent: 0x5150e171062860af290754432a4745ad2fb9f1636677eb22d943a288e7c073b4 with nonce 7902
+2025/04/30 09:28:48 Stored transaction hash 0x5150e171062860af290754432a4745ad2fb9f1636677eb22d943a288e7c073b4 with message hash c50a90cb50baefe05bf700582bc717ae4f1b54da577814d748dc1ec4e3ec4af5
+2025/04/30 09:28:48 Confirmed message hash c50a90cb50baefe05bf700582bc717ae4f1b54da577814d748dc1ec4e3ec4af5
+2025/04/30 09:28:48 Message published successfully: 1-1-6
+2025/04/30 09:28:48 [pub 1] uploaded seq 6 (took 1.004966666s)
+2025/04/30 09:28:50 {"confirmed":18,"event":"tx_confirmed","node":"1","seq":5,"timestamp":"2025-04-30T09:28:50.240943+02:00"}
+2025/04/30 09:28:50 {"confirmed":19,"event":"tx_confirmed","node":"1","seq":6,"timestamp":"2025-04-30T09:28:50.241115+02:00"}
+2025/04/30 09:28:50 {"confirmed":20,"event":"tx_confirmed","node":"1","seq":4,"timestamp":"2025-04-30T09:28:50.241151+02:00"}
+2025/04/30 09:28:50 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:44.894059+02:00","publisherID":4,"seq":4} 2025-04-30 09:28:48 +0200 CEST 269 1 1-4-4 [[109 16 112 165 179 149 46 230 54 37 15 226 138 202 74 184 204 52 132 11 91 150 35 14 15 127 102 96 207 60 140 65]]}
+2025/04/30 09:28:50 {"data_name":"1-4-4","event":"message_latency","latency_ms":5371,"sender":"1","timestamp":"2025-04-30T09:28:50.265872+02:00"}
+2025/04/30 09:28:50 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:47.158441+02:00","publisherID":1,"seq":6} 2025-04-30 09:28:48 +0200 CEST 272 1 1-1-6 [[157 196 72 126 35 19 245 43 96 5 240 116 95 165 221 98 249 228 28 128 209 149 248 192 160 194 72 144 5 92 158 92]]}
+2025/04/30 09:28:50 {"data_name":"1-1-6","event":"message_latency","latency_ms":3111,"sender":"1","timestamp":"2025-04-30T09:28:50.269481+02:00"}
+2025/04/30 09:28:50 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:45.530276+02:00","publisherID":2,"seq":5} 2025-04-30 09:28:48 +0200 CEST 270 1 1-2-5 [[55 212 12 162 92 208 177 39 206 78 16 66 192 17 233 106 205 53 82 50 246 119 42 145 196 66 69 89 183 63 40 25]]}
+2025/04/30 09:28:50 {"data_name":"1-2-5","event":"message_latency","latency_ms":4739,"sender":"1","timestamp":"2025-04-30T09:28:50.269576+02:00"}
+2025/04/30 09:28:50 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:47.145477+02:00","publisherID":3,"seq":6} 2025-04-30 09:28:48 +0200 CEST 271 1 1-3-6 [[82 94 181 230 69 86 125 184 229 96 81 146 68 45 148 158 233 171 106 5 60 86 179 181 72 250 7 145 212 229 114 194]]}
+2025/04/30 09:28:50 {"data_name":"1-3-6","event":"message_latency","latency_ms":3125,"sender":"1","timestamp":"2025-04-30T09:28:50.27132+02:00"}
+2025/04/30 09:28:50 Transaction sent: 0xaa664472abc618bd155a57daea6ecf900ffb760fc2ee8653036a9e3ba8081d09 with nonce 7903
+2025/04/30 09:28:50 Stored transaction hash 0xaa664472abc618bd155a57daea6ecf900ffb760fc2ee8653036a9e3ba8081d09 with message hash 4dbc0665f887358c58343c22df4627529c242b3896acc52fc890acbb94b2da47
+2025/04/30 09:28:50 Confirmed message hash 4dbc0665f887358c58343c22df4627529c242b3896acc52fc890acbb94b2da47
+2025/04/30 09:28:50 Message published successfully: 1-4-5
+2025/04/30 09:28:50 [pub 4] uploaded seq 5 (took 435.082542ms)
+2025/04/30 09:28:50 Transaction sent: 0x07851bdfe47e4d2a3634baad481c8050d49e818c2ce8a1f8d81c53e3603441b8 with nonce 7904
+2025/04/30 09:28:50 Stored transaction hash 0x07851bdfe47e4d2a3634baad481c8050d49e818c2ce8a1f8d81c53e3603441b8 with message hash 593ad62f0aaf020402b78b11c55dc8807fa3072350352cc07fdc81895160ef64
+2025/04/30 09:28:50 Confirmed message hash 593ad62f0aaf020402b78b11c55dc8807fa3072350352cc07fdc81895160ef64
+2025/04/30 09:28:50 Message published successfully: 1-2-6
+2025/04/30 09:28:50 [pub 2] uploaded seq 6 (took 743.930875ms)
+2025/04/30 09:28:51 Transaction sent: 0xdb324b69d0d79338c4236cdc2b2b06f3c17fe40b7a3702c5144e92137d263eff with nonce 7905
+2025/04/30 09:28:51 Stored transaction hash 0xdb324b69d0d79338c4236cdc2b2b06f3c17fe40b7a3702c5144e92137d263eff with message hash 45a4d735b6bc42712e193c78f663b4c1aa8b5e2afe62409865a391cf1075bfe6
+2025/04/30 09:28:51 Confirmed message hash 45a4d735b6bc42712e193c78f663b4c1aa8b5e2afe62409865a391cf1075bfe6
+2025/04/30 09:28:51 Message published successfully: 1-1-7
+2025/04/30 09:28:51 [pub 1] uploaded seq 7 (took 975.324167ms)
+2025/04/30 09:28:52 {"confirmed":21,"event":"tx_confirmed","node":"1","seq":5,"timestamp":"2025-04-30T09:28:52.782055+02:00"}
+2025/04/30 09:28:52 {"confirmed":22,"event":"tx_confirmed","node":"1","seq":6,"timestamp":"2025-04-30T09:28:52.782213+02:00"}
+2025/04/30 09:28:52 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:50.003265+02:00","publisherID":4,"seq":5} 2025-04-30 09:28:51 +0200 CEST 273 1 1-4-5 [[57 51 244 38 152 60 144 139 50 250 172 47 250 76 165 197 32 92 25 22 204 50 252 75 220 253 5 157 230 167 211 49]]}
+2025/04/30 09:28:52 {"data_name":"1-4-5","event":"message_latency","latency_ms":2878,"sender":"1","timestamp":"2025-04-30T09:28:52.881965+02:00"}
+2025/04/30 09:28:52 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:50.005883+02:00","publisherID":2,"seq":6} 2025-04-30 09:28:51 +0200 CEST 274 1 1-2-6 [[192 20 127 171 211 19 236 167 149 45 229 99 36 174 215 196 57 59 166 177 142 53 78 188 39 92 113 16 0 140 42 145]]}
+2025/04/30 09:28:52 {"data_name":"1-2-6","event":"message_latency","latency_ms":2879,"sender":"1","timestamp":"2025-04-30T09:28:52.885615+02:00"}
+2025/04/30 09:28:52 Transaction sent: 0xb7c3ec10d489ea27d560e9031836b561be560cc06446c02b70340acab05f7769 with nonce 7906
+2025/04/30 09:28:52 Stored transaction hash 0xb7c3ec10d489ea27d560e9031836b561be560cc06446c02b70340acab05f7769 with message hash e11622214bbab520414edfa2a3bdbab306b40258bab529716ccaa55b2b754483
+2025/04/30 09:28:52 Confirmed message hash e11622214bbab520414edfa2a3bdbab306b40258bab529716ccaa55b2b754483
+2025/04/30 09:28:52 Message published successfully: 1-4-6
+2025/04/30 09:28:52 [pub 4] uploaded seq 6 (took 445.534542ms)
+2025/04/30 09:28:53 Transaction sent: 0x16fb587a3fa7c22bee517cf79d1d0e66afc1dbee7ecb948ea35cd0678c1d22e5 with nonce 7907
+2025/04/30 09:28:53 Stored transaction hash 0x16fb587a3fa7c22bee517cf79d1d0e66afc1dbee7ecb948ea35cd0678c1d22e5 with message hash 923911dd87439f2d61700f65697c43f4a5ad2721cb354b8cb4de64043d1f58d8
+2025/04/30 09:28:53 Confirmed message hash 923911dd87439f2d61700f65697c43f4a5ad2721cb354b8cb4de64043d1f58d8
+2025/04/30 09:28:53 Message published successfully: 1-2-7
+2025/04/30 09:28:53 [pub 2] uploaded seq 7 (took 773.370791ms)
+2025/04/30 09:28:53 {"elapsed_seconds":21.54369875,"event":"periodic_stats","messages_per_sec":1.1000025529959252,"messages_sent":25,"node":"1","timestamp":"2025-04-30T09:28:53.720339+02:00","total_messages":22}
+2025/04/30 09:28:53 {"event":"node_processing_stats","interval_msgs_per_sec":1.2000046300978648,"messages_per_sec":1.1499712986713364,"messages_processed":23,"timestamp":"2025-04-30T09:28:53.720349+02:00","uptime_seconds":20.000499166}
+2025/04/30 09:28:54 {"confirmed":23,"event":"tx_confirmed","node":"1","seq":6,"timestamp":"2025-04-30T09:28:54.949726+02:00"}
+2025/04/30 09:28:54 {"confirmed":24,"event":"tx_confirmed","node":"1","seq":7,"timestamp":"2025-04-30T09:28:54.949884+02:00"}
+2025/04/30 09:28:55 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:52.545456+02:00","publisherID":4,"seq":6} 2025-04-30 09:28:53 +0200 CEST 276 1 1-4-6 [[77 188 6 101 248 135 53 140 88 52 60 34 223 70 39 82 156 36 43 56 150 172 197 47 200 144 172 187 148 178 218 71]]}
+2025/04/30 09:28:55 {"data_name":"1-4-6","event":"message_latency","latency_ms":2505,"sender":"1","timestamp":"2025-04-30T09:28:55.051447+02:00"}
+2025/04/30 09:28:55 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:50.089241+02:00","publisherID":1,"seq":7} 2025-04-30 09:28:53 +0200 CEST 275 1 1-1-7 [[197 10 144 203 80 186 239 224 91 247 0 88 43 199 23 174 79 27 84 218 87 120 20 215 72 220 30 196 227 236 74 245]]}
+2025/04/30 09:28:55 {"data_name":"1-1-7","event":"message_latency","latency_ms":4962,"sender":"1","timestamp":"2025-04-30T09:28:55.051489+02:00"}
+2025/04/30 09:28:55 Transaction sent: 0xaac079d3892e89c34fbfd3d5a9dfa90cc337ca545d170c4013d0faaea1fb6fb3 with nonce 7908
+2025/04/30 09:28:55 Stored transaction hash 0xaac079d3892e89c34fbfd3d5a9dfa90cc337ca545d170c4013d0faaea1fb6fb3 with message hash 78904d63c8f0110050d32c8903b3a209d40f09cc4248d136b4d7bb4a2e9e8163
+2025/04/30 09:28:55 Confirmed message hash 78904d63c8f0110050d32c8903b3a209d40f09cc4248d136b4d7bb4a2e9e8163
+2025/04/30 09:28:55 Message published successfully: 1-4-7
+2025/04/30 09:28:55 [pub 4] uploaded seq 7 (took 453.446584ms)
+2025/04/30 09:28:55 Transaction sent: 0x6c57cb02e3916a0a4cba2128e13bfce666608c351da7342cec4e02a130a9e56c with nonce 7909
+2025/04/30 09:28:55 Stored transaction hash 0x6c57cb02e3916a0a4cba2128e13bfce666608c351da7342cec4e02a130a9e56c with message hash 445b40d140898a9f015c50b85ba3408c6b8d3e06ff884dc762b328fffaf4f556
+2025/04/30 09:28:55 Confirmed message hash 445b40d140898a9f015c50b85ba3408c6b8d3e06ff884dc762b328fffaf4f556
+2025/04/30 09:28:55 Message published successfully: 1-1-8
+2025/04/30 09:28:55 [pub 1] uploaded seq 8 (took 749.582459ms)
+2025/04/30 09:28:57 {"confirmed":25,"event":"tx_confirmed","node":"1","seq":7,"timestamp":"2025-04-30T09:28:57.800361+02:00"}
+2025/04/30 09:28:57 {"confirmed":26,"event":"tx_confirmed","node":"1","seq":7,"timestamp":"2025-04-30T09:28:57.80049+02:00"}
+2025/04/30 09:28:57 {"confirmed":27,"event":"tx_confirmed","node":"1","seq":8,"timestamp":"2025-04-30T09:28:57.800512+02:00"}
+2025/04/30 09:28:57 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:52.552433+02:00","publisherID":2,"seq":7} 2025-04-30 09:28:55 +0200 CEST 277 1 1-2-7 [[89 58 214 47 10 175 2 4 2 183 139 17 197 93 200 128 127 163 7 35 80 53 44 192 127 220 129 137 81 96 239 100]]}
+2025/04/30 09:28:57 {"data_name":"1-2-7","event":"message_latency","latency_ms":5287,"sender":"1","timestamp":"2025-04-30T09:28:57.83993+02:00"}
+2025/04/30 09:28:57 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:54.796418+02:00","publisherID":1,"seq":8} 2025-04-30 09:28:56 +0200 CEST 279 1 1-1-8 [[69 164 215 53 182 188 66 113 46 25 60 120 246 99 180 193 170 139 94 42 254 98 64 152 101 163 145 207 16 117 191 230]]}
+2025/04/30 09:28:57 {"data_name":"1-1-8","event":"message_latency","latency_ms":3047,"sender":"1","timestamp":"2025-04-30T09:28:57.844131+02:00"}
+2025/04/30 09:28:57 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:54.781335+02:00","publisherID":4,"seq":7} 2025-04-30 09:28:56 +0200 CEST 278 1 1-4-7 [[225 22 34 33 75 186 181 32 65 78 223 162 163 189 186 179 6 180 2 88 186 181 41 113 108 202 165 91 43 117 68 131]]}
+2025/04/30 09:28:57 {"data_name":"1-4-7","event":"message_latency","latency_ms":3066,"sender":"1","timestamp":"2025-04-30T09:28:57.847644+02:00"}
+2025/04/30 09:28:57 Transaction sent: 0x6bc8bb92064be1f95af827793981878772e752b882372ab4d58c493f791f5930 with nonce 7910
+2025/04/30 09:28:57 Stored transaction hash 0x6bc8bb92064be1f95af827793981878772e752b882372ab4d58c493f791f5930 with message hash d2b53e632c815e01d5bd2f6b7bf44db34172ae5308607ec81c545b5da9e34170
+2025/04/30 09:28:57 Confirmed message hash d2b53e632c815e01d5bd2f6b7bf44db34172ae5308607ec81c545b5da9e34170
+2025/04/30 09:28:57 Message published successfully: 1-4-8
+2025/04/30 09:28:57 [pub 4] uploaded seq 8 (took 432.921333ms)
+2025/04/30 09:28:58 Transaction sent: 0x8bdd5b0c7e10e8833f42998cc0b0e396c27aa0bdf7b9642742b7c2aaa69f1144 with nonce 7911
+2025/04/30 09:28:58 Stored transaction hash 0x8bdd5b0c7e10e8833f42998cc0b0e396c27aa0bdf7b9642742b7c2aaa69f1144 with message hash 34cc553cf3d69a9c42bba82c05ec7d325ba8d01cdd37775f6c215c61a9c46080
+2025/04/30 09:28:58 Confirmed message hash 34cc553cf3d69a9c42bba82c05ec7d325ba8d01cdd37775f6c215c61a9c46080
+2025/04/30 09:28:58 Message published successfully: 1-2-8
+2025/04/30 09:28:58 [pub 2] uploaded seq 8 (took 744.397416ms)
+2025/04/30 09:28:58 Transaction sent: 0x25417279246ff828ec9ded7843dab1df6a62bae71cdd41daaaf2f73ea608ea19 with nonce 7912
+2025/04/30 09:28:58 Stored transaction hash 0x25417279246ff828ec9ded7843dab1df6a62bae71cdd41daaaf2f73ea608ea19 with message hash 74ee9fdad18b405ccd7a35341b1b688e0f63a2374864bd56281f042632470458
+2025/04/30 09:28:58 Confirmed message hash 74ee9fdad18b405ccd7a35341b1b688e0f63a2374864bd56281f042632470458
+2025/04/30 09:28:58 Message published successfully: 1-1-9
+2025/04/30 09:28:58 [pub 1] uploaded seq 9 (took 1.044194833s)
+2025/04/30 09:29:00 {"confirmed":28,"event":"tx_confirmed","node":"1","seq":8,"timestamp":"2025-04-30T09:29:00.499585+02:00"}
+2025/04/30 09:29:00 {"confirmed":29,"event":"tx_confirmed","node":"1","seq":8,"timestamp":"2025-04-30T09:29:00.499734+02:00"}
+2025/04/30 09:29:00 {"confirmed":30,"event":"tx_confirmed","node":"1","seq":9,"timestamp":"2025-04-30T09:29:00.499764+02:00"}
+2025/04/30 09:29:00 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:57.503267+02:00","publisherID":4,"seq":8} 2025-04-30 09:28:58 +0200 CEST 280 1 1-4-8 [[120 144 77 99 200 240 17 0 80 211 44 137 3 179 162 9 212 15 9 204 66 72 209 54 180 215 187 74 46 158 129 99]]}
+2025/04/30 09:29:00 {"data_name":"1-4-8","event":"message_latency","latency_ms":3169,"sender":"1","timestamp":"2025-04-30T09:29:00.672833+02:00"}
+2025/04/30 09:29:00 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:57.50451+02:00","publisherID":1,"seq":9} 2025-04-30 09:28:58 +0200 CEST 282 1 1-1-9 [[68 91 64 209 64 137 138 159 1 92 80 184 91 163 64 140 107 141 62 6 255 136 77 199 98 179 40 255 250 244 245 86]]}
+2025/04/30 09:29:00 {"data_name":"1-1-9","event":"message_latency","latency_ms":3179,"sender":"1","timestamp":"2025-04-30T09:29:00.683718+02:00"}
+2025/04/30 09:29:00 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:28:57.503257+02:00","publisherID":2,"seq":8} 2025-04-30 09:28:58 +0200 CEST 281 1 1-2-8 [[146 57 17 221 135 67 159 45 97 112 15 101 105 124 67 244 165 173 39 33 203 53 75 140 180 222 100 4 61 31 88 216]]}
+2025/04/30 09:29:00 {"data_name":"1-2-8","event":"message_latency","latency_ms":3180,"sender":"1","timestamp":"2025-04-30T09:29:00.683902+02:00"}
+2025/04/30 09:29:00 Transaction sent: 0x0455e264134eadc6ca6dc483b33d6f9a9fa4785823bf591470e54ecb462979a1 with nonce 7913
+2025/04/30 09:29:00 Stored transaction hash 0x0455e264134eadc6ca6dc483b33d6f9a9fa4785823bf591470e54ecb462979a1 with message hash 5893c963fdf73f35bc71d7629ec6280e4700cd70f7131d61adeb953b1729a4b3
+2025/04/30 09:29:00 Confirmed message hash 5893c963fdf73f35bc71d7629ec6280e4700cd70f7131d61adeb953b1729a4b3
+2025/04/30 09:29:00 Message published successfully: 1-4-9
+2025/04/30 09:29:00 [pub 4] uploaded seq 9 (took 455.232167ms)
+2025/04/30 09:29:01 Transaction sent: 0xd65ebee9ab41ffd97793cf95b974a651fbf8344d3b7a1673515f3f616660aaaf with nonce 7914
+2025/04/30 09:29:01 Stored transaction hash 0xd65ebee9ab41ffd97793cf95b974a651fbf8344d3b7a1673515f3f616660aaaf with message hash 23e0c359560634e69beb167dcebcc152ea1ab2fcf63d8409603d4527087b707e
+2025/04/30 09:29:01 Confirmed message hash 23e0c359560634e69beb167dcebcc152ea1ab2fcf63d8409603d4527087b707e
+2025/04/30 09:29:01 Message published successfully: 1-2-9
+2025/04/30 09:29:01 [pub 2] uploaded seq 9 (took 785.592583ms)
+2025/04/30 09:29:01 Transaction sent: 0xa3c46a5653c013e7164e83e3c10d2ecaec5120bc264d4b167e84d00deda48f04 with nonce 7915
+2025/04/30 09:29:01 Stored transaction hash 0xa3c46a5653c013e7164e83e3c10d2ecaec5120bc264d4b167e84d00deda48f04 with message hash cc7e0ca8a64ee1a11ab15e5f86b66c059c9337c4048d817bd3781813fa6c9669
+2025/04/30 09:29:01 Confirmed message hash cc7e0ca8a64ee1a11ab15e5f86b66c059c9337c4048d817bd3781813fa6c9669
+2025/04/30 09:29:01 Message published successfully: 1-1-10
+2025/04/30 09:29:01 [pub 1] uploaded seq 10 (took 1.074461625s)
+2025/04/30 09:29:02 {"confirmed":31,"event":"tx_confirmed","node":"1","seq":9,"timestamp":"2025-04-30T09:29:02.986136+02:00"}
+2025/04/30 09:29:02 {"confirmed":32,"event":"tx_confirmed","node":"1","seq":9,"timestamp":"2025-04-30T09:29:02.986304+02:00"}
+2025/04/30 09:29:02 {"confirmed":33,"event":"tx_confirmed","node":"1","seq":10,"timestamp":"2025-04-30T09:29:02.986338+02:00"}
+2025/04/30 09:29:03 Transaction sent: 0x05480b53b2389c53d96c1da80863a84b5dd27b94c078f42db01ecb0fdde3d4c5 with nonce 7916
+2025/04/30 09:29:03 Stored transaction hash 0x05480b53b2389c53d96c1da80863a84b5dd27b94c078f42db01ecb0fdde3d4c5 with message hash ac15a258d0d0841e7c780f67fd8c048e9579615fcf20a5bd29112efc28849f89
+2025/04/30 09:29:03 Confirmed message hash ac15a258d0d0841e7c780f67fd8c048e9579615fcf20a5bd29112efc28849f89
+2025/04/30 09:29:03 Message published successfully: 1-4-10
+2025/04/30 09:29:03 [pub 4] uploaded seq 10 (took 457.449208ms)
+2025/04/30 09:29:03 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:00.246058+02:00","publisherID":4,"seq":9} 2025-04-30 09:29:01 +0200 CEST 283 1 1-4-9 [[210 181 62 99 44 129 94 1 213 189 47 107 123 244 77 179 65 114 174 83 8 96 126 200 28 84 91 93 169 227 65 112]]}
+2025/04/30 09:29:03 {"data_name":"1-4-9","event":"message_latency","latency_ms":2947,"sender":"1","timestamp":"2025-04-30T09:29:03.193222+02:00"}
+2025/04/30 09:29:03 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:00.246052+02:00","publisherID":2,"seq":9} 2025-04-30 09:29:01 +0200 CEST 284 1 1-2-9 [[52 204 85 60 243 214 154 156 66 187 168 44 5 236 125 50 91 168 208 28 221 55 119 95 108 33 92 97 169 196 96 128]]}
+2025/04/30 09:29:03 {"data_name":"1-2-9","event":"message_latency","latency_ms":2947,"sender":"1","timestamp":"2025-04-30T09:29:03.19336+02:00"}
+2025/04/30 09:29:03 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:00.257044+02:00","publisherID":1,"seq":10} 2025-04-30 09:29:01 +0200 CEST 285 1 1-1-10 [[116 238 159 218 209 139 64 92 205 122 53 52 27 27 104 142 15 99 162 55 72 100 189 86 40 31 4 38 50 71 4 88]]}
+2025/04/30 09:29:03 {"data_name":"1-1-10","event":"message_latency","latency_ms":2947,"sender":"1","timestamp":"2025-04-30T09:29:03.204516+02:00"}
+2025/04/30 09:29:03 Transaction sent: 0xff9e29e8c230723cc5088c95934f488dda1f930dbc322318865f9eaaf02f15ce with nonce 7917
+2025/04/30 09:29:03 Stored transaction hash 0xff9e29e8c230723cc5088c95934f488dda1f930dbc322318865f9eaaf02f15ce with message hash decf60608cf4f078fd72396ec6631833b19f981298357eeea675d7dd8dd31693
+2025/04/30 09:29:03 Confirmed message hash decf60608cf4f078fd72396ec6631833b19f981298357eeea675d7dd8dd31693
+2025/04/30 09:29:03 Message published successfully: 1-2-10
+2025/04/30 09:29:03 [pub 2] uploaded seq 10 (took 763.441208ms)
+2025/04/30 09:29:03 {"event":"node_processing_stats","interval_msgs_per_sec":1.100001210001331,"messages_per_sec":1.1333148918067508,"messages_processed":34,"timestamp":"2025-04-30T09:29:03.720225+02:00","uptime_seconds":30.000488166}
+2025/04/30 09:29:03 {"elapsed_seconds":31.543718125,"event":"periodic_stats","messages_per_sec":1.0999978687541292,"messages_sent":35,"node":"1","timestamp":"2025-04-30T09:29:03.7202+02:00","total_messages":33}
+2025/04/30 09:29:03 Transaction sent: 0x7754d36ac97bcd332dd9f34181895173a2ee677f7e67780742eba8dbed333a61 with nonce 7918
+2025/04/30 09:29:03 Stored transaction hash 0x7754d36ac97bcd332dd9f34181895173a2ee677f7e67780742eba8dbed333a61 with message hash 09cba51c1efc7d74a5c03050968c0f3216e01b09586d5ca4076613e2439f0b75
+2025/04/30 09:29:03 Confirmed message hash 09cba51c1efc7d74a5c03050968c0f3216e01b09586d5ca4076613e2439f0b75
+2025/04/30 09:29:03 Message published successfully: 1-1-11
+2025/04/30 09:29:03 [pub 1] uploaded seq 11 (took 1.054125125s)
+2025/04/30 09:29:06 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:02.730676+02:00","publisherID":4,"seq":10} 2025-04-30 09:29:04 +0200 CEST 286 1 1-4-10 [[88 147 201 99 253 247 63 53 188 113 215 98 158 198 40 14 71 0 205 112 247 19 29 97 173 235 149 59 23 41 164 179]]}
+2025/04/30 09:29:06 {"data_name":"1-4-10","event":"message_latency","latency_ms":3570,"sender":"1","timestamp":"2025-04-30T09:29:06.300783+02:00"}
+2025/04/30 09:29:06 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:02.730683+02:00","publisherID":2,"seq":10} 2025-04-30 09:29:04 +0200 CEST 287 1 1-2-10 [[35 224 195 89 86 6 52 230 155 235 22 125 206 188 193 82 234 26 178 252 246 61 132 9 96 61 69 39 8 123 112 126]]}
+2025/04/30 09:29:06 {"data_name":"1-2-10","event":"message_latency","latency_ms":3577,"sender":"1","timestamp":"2025-04-30T09:29:06.308656+02:00"}
+2025/04/30 09:29:06 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:02.755861+02:00","publisherID":1,"seq":11} 2025-04-30 09:29:04 +0200 CEST 288 1 1-1-11 [[204 126 12 168 166 78 225 161 26 177 94 95 134 182 108 5 156 147 55 196 4 141 129 123 211 120 24 19 250 108 150 105]]}
+2025/04/30 09:29:06 {"data_name":"1-1-11","event":"message_latency","latency_ms":3556,"sender":"1","timestamp":"2025-04-30T09:29:06.311901+02:00"}
+2025/04/30 09:29:06 {"confirmed":34,"event":"tx_confirmed","node":"1","seq":10,"timestamp":"2025-04-30T09:29:06.443218+02:00"}
+2025/04/30 09:29:06 {"confirmed":35,"event":"tx_confirmed","node":"1","seq":10,"timestamp":"2025-04-30T09:29:06.443298+02:00"}
+2025/04/30 09:29:06 {"confirmed":36,"event":"tx_confirmed","node":"1","seq":11,"timestamp":"2025-04-30T09:29:06.443311+02:00"}
+2025/04/30 09:29:06 Transaction sent: 0x9c524432c4e6453ea3e7687fface837a3eb6280d83a234e85e09a744adab297e with nonce 7919
+2025/04/30 09:29:06 Stored transaction hash 0x9c524432c4e6453ea3e7687fface837a3eb6280d83a234e85e09a744adab297e with message hash ffcfae78d12cdade95871b9f7e5b62d1fec2932ccaa621bb676841617ea0a608
+2025/04/30 09:29:06 Confirmed message hash ffcfae78d12cdade95871b9f7e5b62d1fec2932ccaa621bb676841617ea0a608
+2025/04/30 09:29:06 Message published successfully: 1-2-11
+2025/04/30 09:29:06 [pub 2] uploaded seq 11 (took 443.349416ms)
+2025/04/30 09:29:07 Transaction sent: 0xc176d7f1d9b357dadc156e1bf446779b734de4c3e480146a4a67ca5e09db2662 with nonce 7920
+2025/04/30 09:29:07 Stored transaction hash 0xc176d7f1d9b357dadc156e1bf446779b734de4c3e480146a4a67ca5e09db2662 with message hash a865b9c31921cf50996c81d3f763f0af44de549fd93363699c33e75e6ec67741
+2025/04/30 09:29:07 Confirmed message hash a865b9c31921cf50996c81d3f763f0af44de549fd93363699c33e75e6ec67741
+2025/04/30 09:29:07 Message published successfully: 1-4-11
+2025/04/30 09:29:07 [pub 4] uploaded seq 11 (took 741.840542ms)
+2025/04/30 09:29:07 Transaction sent: 0xc25cfc1ffc65cd47f7814613492f30ef0a3c45808a1b29f54d68fd5e2da00d16 with nonce 7921
+2025/04/30 09:29:07 Stored transaction hash 0xc25cfc1ffc65cd47f7814613492f30ef0a3c45808a1b29f54d68fd5e2da00d16 with message hash 1c7a1486f97dea3350089d2ac8ae4af16670363a2cefc91ef69f6b218ec4bfe9
+2025/04/30 09:29:07 Confirmed message hash 1c7a1486f97dea3350089d2ac8ae4af16670363a2cefc91ef69f6b218ec4bfe9
+2025/04/30 09:29:07 Message published successfully: 1-1-12
+2025/04/30 09:29:07 [pub 1] uploaded seq 12 (took 1.020262167s)
+2025/04/30 09:29:09 {"confirmed":37,"event":"tx_confirmed","node":"1","seq":11,"timestamp":"2025-04-30T09:29:09.045447+02:00"}
+2025/04/30 09:29:09 {"confirmed":38,"event":"tx_confirmed","node":"1","seq":11,"timestamp":"2025-04-30T09:29:09.045576+02:00"}
+2025/04/30 09:29:09 {"confirmed":39,"event":"tx_confirmed","node":"1","seq":12,"timestamp":"2025-04-30T09:29:09.045592+02:00"}
+2025/04/30 09:29:09 Transaction sent: 0x620e18a514fcf4da1323e4654e141205dd5e4439ee3f7c22c1332229a0253d41 with nonce 7922
+2025/04/30 09:29:09 Stored transaction hash 0x620e18a514fcf4da1323e4654e141205dd5e4439ee3f7c22c1332229a0253d41 with message hash cfbf116dc108577d15f3609158b830a80108553406deca5408d7755eb67e4578
+2025/04/30 09:29:09 Confirmed message hash cfbf116dc108577d15f3609158b830a80108553406deca5408d7755eb67e4578
+2025/04/30 09:29:09 Message published successfully: 1-2-12
+2025/04/30 09:29:09 [pub 2] uploaded seq 12 (took 448.211583ms)
+2025/04/30 09:29:09 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:06.240089+02:00","publisherID":2,"seq":11} 2025-04-30 09:29:07 +0200 CEST 289 1 1-2-11 [[222 207 96 96 140 244 240 120 253 114 57 110 198 99 24 51 177 159 152 18 152 53 126 238 166 117 215 221 141 211 22 147]]}
+2025/04/30 09:29:09 {"data_name":"1-2-11","event":"message_latency","latency_ms":3147,"sender":"1","timestamp":"2025-04-30T09:29:09.387527+02:00"}
+2025/04/30 09:29:09 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:06.259023+02:00","publisherID":4,"seq":11} 2025-04-30 09:29:07 +0200 CEST 290 1 1-4-11 [[172 21 162 88 208 208 132 30 124 120 15 103 253 140 4 142 149 121 97 95 207 32 165 189 41 17 46 252 40 132 159 137]]}
+2025/04/30 09:29:09 {"data_name":"1-4-11","event":"message_latency","latency_ms":3128,"sender":"1","timestamp":"2025-04-30T09:29:09.387586+02:00"}
+2025/04/30 09:29:09 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:06.279151+02:00","publisherID":1,"seq":12} 2025-04-30 09:29:07 +0200 CEST 291 1 1-1-12 [[9 203 165 28 30 252 125 116 165 192 48 80 150 140 15 50 22 224 27 9 88 109 92 164 7 102 19 226 67 159 11 117]]}
+2025/04/30 09:29:09 {"data_name":"1-1-12","event":"message_latency","latency_ms":3123,"sender":"1","timestamp":"2025-04-30T09:29:09.402754+02:00"}
+2025/04/30 09:29:09 Transaction sent: 0xd54056eb3b9792f6448aa9a02b486e67fddfd97d509a01e12dee6ebf664fb949 with nonce 7923
+2025/04/30 09:29:09 Stored transaction hash 0xd54056eb3b9792f6448aa9a02b486e67fddfd97d509a01e12dee6ebf664fb949 with message hash dbff193ea96ba78122c3f27c55bf53784c59f222e4dc6a1a66fddb2e057acbe8
+2025/04/30 09:29:09 Confirmed message hash dbff193ea96ba78122c3f27c55bf53784c59f222e4dc6a1a66fddb2e057acbe8
+2025/04/30 09:29:09 Message published successfully: 1-1-13
+2025/04/30 09:29:09 [pub 1] uploaded seq 13 (took 752.801333ms)
+2025/04/30 09:29:09 Transaction sent: 0x95b8d384c7c8f587974b011b67b73d95da1164fba09374952ea0ab58c91cf9f0 with nonce 7924
+2025/04/30 09:29:09 Stored transaction hash 0x95b8d384c7c8f587974b011b67b73d95da1164fba09374952ea0ab58c91cf9f0 with message hash cb60b701f94e9a094d07dfed5fedaafc4ae7afe4a7aa9e21532fd556b5345ae3
+2025/04/30 09:29:09 Confirmed message hash cb60b701f94e9a094d07dfed5fedaafc4ae7afe4a7aa9e21532fd556b5345ae3
+2025/04/30 09:29:09 Message published successfully: 1-4-12
+2025/04/30 09:29:09 [pub 4] uploaded seq 12 (took 1.076208292s)
+2025/04/30 09:29:11 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:08.834516+02:00","publisherID":1,"seq":13} 2025-04-30 09:29:10 +0200 CEST 293 1 1-1-13 [[28 122 20 134 249 125 234 51 80 8 157 42 200 174 74 241 102 112 54 58 44 239 201 30 246 159 107 33 142 196 191 233]]}
+2025/04/30 09:29:11 {"data_name":"1-1-13","event":"message_latency","latency_ms":2792,"sender":"1","timestamp":"2025-04-30T09:29:11.627086+02:00"}
+2025/04/30 09:29:11 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:08.834513+02:00","publisherID":2,"seq":12} 2025-04-30 09:29:10 +0200 CEST 292 1 1-2-12 [[255 207 174 120 209 44 218 222 149 135 27 159 126 91 98 209 254 194 147 44 202 166 33 187 103 104 65 97 126 160 166 8]]}
+2025/04/30 09:29:11 {"data_name":"1-2-12","event":"message_latency","latency_ms":2793,"sender":"1","timestamp":"2025-04-30T09:29:11.628177+02:00"}
+2025/04/30 09:29:11 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:08.84767+02:00","publisherID":4,"seq":12} 2025-04-30 09:29:10 +0200 CEST 294 1 1-4-12 [[168 101 185 195 25 33 207 80 153 108 129 211 247 99 240 175 68 222 84 159 217 51 99 105 156 51 231 94 110 198 119 65]]}
+2025/04/30 09:29:11 {"data_name":"1-4-12","event":"message_latency","latency_ms":2784,"sender":"1","timestamp":"2025-04-30T09:29:11.632493+02:00"}
+2025/04/30 09:29:11 {"confirmed":40,"event":"tx_confirmed","node":"1","seq":12,"timestamp":"2025-04-30T09:29:11.674751+02:00"}
+2025/04/30 09:29:11 {"confirmed":41,"event":"tx_confirmed","node":"1","seq":13,"timestamp":"2025-04-30T09:29:11.674803+02:00"}
+2025/04/30 09:29:11 {"confirmed":42,"event":"tx_confirmed","node":"1","seq":12,"timestamp":"2025-04-30T09:29:11.674821+02:00"}
+2025/04/30 09:29:11 Transaction sent: 0xa1827a2e52d1670c05cf997c09b2aafddbbd5d292b673ef9764059ccea697bc9 with nonce 7925
+2025/04/30 09:29:11 Stored transaction hash 0xa1827a2e52d1670c05cf997c09b2aafddbbd5d292b673ef9764059ccea697bc9 with message hash 184eb030669596affa2f4a5fc19f04277c419b94ff7a9e548bbfcfb422cbc789
+2025/04/30 09:29:11 Confirmed message hash 184eb030669596affa2f4a5fc19f04277c419b94ff7a9e548bbfcfb422cbc789
+2025/04/30 09:29:11 Message published successfully: 1-2-13
+2025/04/30 09:29:11 [pub 2] uploaded seq 13 (took 451.61875ms)
+2025/04/30 09:29:12 Transaction sent: 0xa961c658e18337f79263e1ada3c397deae96b9b41c71ad512952fbc6dabff989 with nonce 7926
+2025/04/30 09:29:12 Stored transaction hash 0xa961c658e18337f79263e1ada3c397deae96b9b41c71ad512952fbc6dabff989 with message hash 8b8e9635f6e90472fc4774e906a6842458894fc178579567bc2fd0f4c9fd94f2
+2025/04/30 09:29:12 Confirmed message hash 8b8e9635f6e90472fc4774e906a6842458894fc178579567bc2fd0f4c9fd94f2
+2025/04/30 09:29:12 Message published successfully: 1-1-14
+2025/04/30 09:29:12 [pub 1] uploaded seq 14 (took 735.775417ms)
+2025/04/30 09:29:12 Transaction sent: 0x00ef197f4a35d3218741201078a2996af72abb07d7bd5627dc942d7bcb01cb3f with nonce 7927
+2025/04/30 09:29:12 Stored transaction hash 0x00ef197f4a35d3218741201078a2996af72abb07d7bd5627dc942d7bcb01cb3f with message hash c02b4eeee96530357a0db08fdc0d76142e4f74cd304345386d8139407025ae33
+2025/04/30 09:29:12 Confirmed message hash c02b4eeee96530357a0db08fdc0d76142e4f74cd304345386d8139407025ae33
+2025/04/30 09:29:12 Message published successfully: 1-4-13
+2025/04/30 09:29:12 [pub 4] uploaded seq 13 (took 1.000781125s)
+2025/04/30 09:29:13 {"confirmed":43,"event":"tx_confirmed","node":"1","seq":13,"timestamp":"2025-04-30T09:29:13.510268+02:00"}
+2025/04/30 09:29:13 {"elapsed_seconds":41.543713958,"event":"periodic_stats","messages_per_sec":1.0000004167001737,"messages_sent":45,"node":"1","timestamp":"2025-04-30T09:29:13.720145+02:00","total_messages":43}
+2025/04/30 09:29:13 {"event":"node_processing_stats","interval_msgs_per_sec":0.8999962162359076,"messages_per_sec":1.0749857508488754,"messages_processed":43,"timestamp":"2025-04-30T09:29:13.720154+02:00","uptime_seconds":40.000530208}
+2025/04/30 09:29:13 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:11.387527+02:00","publisherID":2,"seq":13} 2025-04-30 09:29:12 +0200 CEST 295 1 1-2-13 [[207 191 17 109 193 8 87 125 21 243 96 145 88 184 48 168 1 8 85 52 6 222 202 84 8 215 117 94 182 126 69 120]]}
+2025/04/30 09:29:13 {"data_name":"1-2-13","event":"message_latency","latency_ms":2340,"sender":"1","timestamp":"2025-04-30T09:29:13.728017+02:00"}
+2025/04/30 09:29:13 Transaction sent: 0xa4c5877763df6f5c3fd7962680634cb4cf2ea32c34dccb07a9c83a8e2a42c195 with nonce 7928
+2025/04/30 09:29:13 Stored transaction hash 0xa4c5877763df6f5c3fd7962680634cb4cf2ea32c34dccb07a9c83a8e2a42c195 with message hash eabf5b52956b92e3cfba76e98059a92a8c98091f6bc33aeb203dc5df8dfad389
+2025/04/30 09:29:13 Confirmed message hash eabf5b52956b92e3cfba76e98059a92a8c98091f6bc33aeb203dc5df8dfad389
+2025/04/30 09:29:13 Message published successfully: 1-2-14
+2025/04/30 09:29:13 [pub 2] uploaded seq 14 (took 444.049459ms)
+2025/04/30 09:29:14 {"confirmed":44,"event":"tx_confirmed","node":"1","seq":14,"timestamp":"2025-04-30T09:29:14.28424+02:00"}
+2025/04/30 09:29:14 {"confirmed":45,"event":"tx_confirmed","node":"1","seq":13,"timestamp":"2025-04-30T09:29:14.284287+02:00"}
+2025/04/30 09:29:14 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:11.46109+02:00","publisherID":4,"seq":13} 2025-04-30 09:29:13 +0200 CEST 297 1 1-4-13 [[203 96 183 1 249 78 154 9 77 7 223 237 95 237 170 252 74 231 175 228 167 170 158 33 83 47 213 86 181 52 90 227]]}
+2025/04/30 09:29:14 {"data_name":"1-4-13","event":"message_latency","latency_ms":3027,"sender":"1","timestamp":"2025-04-30T09:29:14.48907+02:00"}
+2025/04/30 09:29:14 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:11.421532+02:00","publisherID":1,"seq":14} 2025-04-30 09:29:13 +0200 CEST 296 1 1-1-14 [[219 255 25 62 169 107 167 129 34 195 242 124 85 191 83 120 76 89 242 34 228 220 106 26 102 253 219 46 5 122 203 232]]}
+2025/04/30 09:29:14 {"data_name":"1-1-14","event":"message_latency","latency_ms":3067,"sender":"1","timestamp":"2025-04-30T09:29:14.489142+02:00"}
+2025/04/30 09:29:14 Transaction sent: 0xd384d60d2386cc22c8cb2f524abcd90e8e00f2c29da0dd2e064adf7c818f47cb with nonce 7929
+2025/04/30 09:29:14 Stored transaction hash 0xd384d60d2386cc22c8cb2f524abcd90e8e00f2c29da0dd2e064adf7c818f47cb with message hash a6d8c9eee658ad785b5e4d19cee79f27546f1b06cdb1d3ad5db3195f33bc5982
+2025/04/30 09:29:14 Confirmed message hash a6d8c9eee658ad785b5e4d19cee79f27546f1b06cdb1d3ad5db3195f33bc5982
+2025/04/30 09:29:14 Message published successfully: 1-4-14
+2025/04/30 09:29:14 [pub 4] uploaded seq 14 (took 450.030708ms)
+2025/04/30 09:29:14 Transaction sent: 0x8b0cfe48aaac556a439f13956bab9670614a61d13220414bfe452c7ff9053c4f with nonce 7930
+2025/04/30 09:29:14 Stored transaction hash 0x8b0cfe48aaac556a439f13956bab9670614a61d13220414bfe452c7ff9053c4f with message hash 87566965f38e1fffa657e0b00acadb7807c0b33197ffe0fe9212543a0b4a362a
+2025/04/30 09:29:14 Confirmed message hash 87566965f38e1fffa657e0b00acadb7807c0b33197ffe0fe9212543a0b4a362a
+2025/04/30 09:29:14 Message published successfully: 1-1-15
+2025/04/30 09:29:14 [pub 1] uploaded seq 15 (took 750.597833ms)
+2025/04/30 09:29:16 {"confirmed":46,"event":"tx_confirmed","node":"1","seq":14,"timestamp":"2025-04-30T09:29:16.902918+02:00"}
+2025/04/30 09:29:16 {"confirmed":47,"event":"tx_confirmed","node":"1","seq":14,"timestamp":"2025-04-30T09:29:16.903035+02:00"}
+2025/04/30 09:29:16 {"confirmed":48,"event":"tx_confirmed","node":"1","seq":15,"timestamp":"2025-04-30T09:29:16.903051+02:00"}
+2025/04/30 09:29:16 Transaction sent: 0x57e448f7c2b15761648ca069c03a89d1621366e8235af28dd3555b110fad0d08 with nonce 7931
+2025/04/30 09:29:16 Stored transaction hash 0x57e448f7c2b15761648ca069c03a89d1621366e8235af28dd3555b110fad0d08 with message hash 0102730e8f899e8d1b381c4f929a5338a0e7416ca5afaa896f9188d2efbb3eeb
+2025/04/30 09:29:16 Confirmed message hash 0102730e8f899e8d1b381c4f929a5338a0e7416ca5afaa896f9188d2efbb3eeb
+2025/04/30 09:29:16 Message published successfully: 1-2-15
+2025/04/30 09:29:16 [pub 2] uploaded seq 15 (took 457.968333ms)
+2025/04/30 09:29:16 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:13.342067+02:00","publisherID":2,"seq":14} 2025-04-30 09:29:14 +0200 CEST 298 1 1-2-14 [[24 78 176 48 102 149 150 175 250 47 74 95 193 159 4 39 124 65 155 148 255 122 158 84 139 191 207 180 34 203 199 137]]}
+2025/04/30 09:29:16 {"data_name":"1-2-14","event":"message_latency","latency_ms":3614,"sender":"1","timestamp":"2025-04-30T09:29:16.95697+02:00"}
+2025/04/30 09:29:16 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:14.085543+02:00","publisherID":4,"seq":14} 2025-04-30 09:29:14 +0200 CEST 299 1 1-4-14 [[192 43 78 238 233 101 48 53 122 13 176 143 220 13 118 20 46 79 116 205 48 67 69 56 109 129 57 64 112 37 174 51]]}
+2025/04/30 09:29:16 {"data_name":"1-4-14","event":"message_latency","latency_ms":2875,"sender":"1","timestamp":"2025-04-30T09:29:16.961297+02:00"}
+2025/04/30 09:29:16 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:14.086894+02:00","publisherID":1,"seq":15} 2025-04-30 09:29:14 +0200 CEST 300 1 1-1-15 [[139 142 150 53 246 233 4 114 252 71 116 233 6 166 132 36 88 137 79 193 120 87 149 103 188 47 208 244 201 253 148 242]]}
+2025/04/30 09:29:16 {"data_name":"1-1-15","event":"message_latency","latency_ms":2877,"sender":"1","timestamp":"2025-04-30T09:29:16.964306+02:00"}
+2025/04/30 09:29:17 Transaction sent: 0x01d3a80bfa18d14e2192e5a7c91c7301f99df430d9c634ea297b545a61749f0f with nonce 7932
+2025/04/30 09:29:17 Stored transaction hash 0x01d3a80bfa18d14e2192e5a7c91c7301f99df430d9c634ea297b545a61749f0f with message hash d6d81c4e470b5979f0b4c006c71345c3ccaa761310ea31659308aa9a97e3f12d
+2025/04/30 09:29:17 Confirmed message hash d6d81c4e470b5979f0b4c006c71345c3ccaa761310ea31659308aa9a97e3f12d
+2025/04/30 09:29:17 Message published successfully: 1-4-15
+2025/04/30 09:29:17 [pub 4] uploaded seq 15 (took 779.979417ms)
+2025/04/30 09:29:17 Transaction sent: 0x2d7cf50be154a16a8acc8f18b6cd48e82b82e3b8f34a61f4c7ba9636b925a45a with nonce 7933
+2025/04/30 09:29:17 Stored transaction hash 0x2d7cf50be154a16a8acc8f18b6cd48e82b82e3b8f34a61f4c7ba9636b925a45a with message hash 158853b038ec1482f7ba373c66c0794811df3feed50e95551d31013d54e96a88
+2025/04/30 09:29:17 Confirmed message hash 158853b038ec1482f7ba373c66c0794811df3feed50e95551d31013d54e96a88
+2025/04/30 09:29:17 Message published successfully: 1-1-16
+2025/04/30 09:29:17 [pub 1] uploaded seq 16 (took 1.089038958s)
+2025/04/30 09:29:18 {"confirmed":49,"event":"tx_confirmed","node":"1","seq":15,"timestamp":"2025-04-30T09:29:18.566137+02:00"}
+2025/04/30 09:29:18 Transaction sent: 0x1c6abe2cd3be379fccd6e1cc2449e3a36de26c3927f741b245d4a85e015bc349 with nonce 7934
+2025/04/30 09:29:18 Stored transaction hash 0x1c6abe2cd3be379fccd6e1cc2449e3a36de26c3927f741b245d4a85e015bc349 with message hash 686c1ad6d321830cfeea242682bf1d4d76a11ed9c19332b0e20024bc464aa7e4
+2025/04/30 09:29:18 Confirmed message hash 686c1ad6d321830cfeea242682bf1d4d76a11ed9c19332b0e20024bc464aa7e4
+2025/04/30 09:29:18 Message published successfully: 1-2-16
+2025/04/30 09:29:18 [pub 2] uploaded seq 16 (took 460.930083ms)
+2025/04/30 09:29:18 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:16.468686+02:00","publisherID":2,"seq":15} 2025-04-30 09:29:16 +0200 CEST 301 1 1-2-15 [[234 191 91 82 149 107 146 227 207 186 118 233 128 89 169 42 140 152 9 31 107 195 58 235 32 61 197 223 141 250 211 137]]}
+2025/04/30 09:29:18 {"data_name":"1-2-15","event":"message_latency","latency_ms":2341,"sender":"1","timestamp":"2025-04-30T09:29:18.809994+02:00"}
+2025/04/30 09:29:18 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:16.466969+02:00","publisherID":4,"seq":15} 2025-04-30 09:29:17 +0200 CEST 302 1 1-4-15 [[166 216 201 238 230 88 173 120 91 94 77 25 206 231 159 39 84 111 27 6 205 177 211 173 93 179 25 95 51 188 89 130]]}
+2025/04/30 09:29:18 {"data_name":"1-4-15","event":"message_latency","latency_ms":2524,"sender":"1","timestamp":"2025-04-30T09:29:18.991631+02:00"}
+2025/04/30 09:29:18 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:16.474661+02:00","publisherID":1,"seq":16} 2025-04-30 09:29:17 +0200 CEST 303 1 1-1-16 [[135 86 105 101 243 142 31 255 166 87 224 176 10 202 219 120 7 192 179 49 151 255 224 254 146 18 84 58 11 74 54 42]]}
+2025/04/30 09:29:18 {"data_name":"1-1-16","event":"message_latency","latency_ms":2517,"sender":"1","timestamp":"2025-04-30T09:29:18.991694+02:00"}
+2025/04/30 09:29:19 {"confirmed":50,"event":"tx_confirmed","node":"1","seq":15,"timestamp":"2025-04-30T09:29:19.141838+02:00"}
+2025/04/30 09:29:19 {"confirmed":51,"event":"tx_confirmed","node":"1","seq":16,"timestamp":"2025-04-30T09:29:19.141922+02:00"}
+2025/04/30 09:29:19 Transaction sent: 0x1b22b8b7df5bb6539b2a8f74672179bfc3bad3a8fef435cd57b98ad9e2a60e03 with nonce 7935
+2025/04/30 09:29:19 Stored transaction hash 0x1b22b8b7df5bb6539b2a8f74672179bfc3bad3a8fef435cd57b98ad9e2a60e03 with message hash 37c2add677965dd107e09c015827a2a03eb0af3744d542f9799e752f1bbacff0
+2025/04/30 09:29:19 Confirmed message hash 37c2add677965dd107e09c015827a2a03eb0af3744d542f9799e752f1bbacff0
+2025/04/30 09:29:19 Message published successfully: 1-4-16
+2025/04/30 09:29:19 [pub 4] uploaded seq 16 (took 488.861833ms)
+2025/04/30 09:29:19 Transaction sent: 0x177504a3d4a9b33f333753c8c3ba08f5bd457301af66228ab8250a0b9ba7224b with nonce 7936
+2025/04/30 09:29:19 Stored transaction hash 0x177504a3d4a9b33f333753c8c3ba08f5bd457301af66228ab8250a0b9ba7224b with message hash 8000a80ecc64c794148b19e497c72a092d623727d6c4bf170cf62108aad29d17
+2025/04/30 09:29:19 Confirmed message hash 8000a80ecc64c794148b19e497c72a092d623727d6c4bf170cf62108aad29d17
+2025/04/30 09:29:19 Message published successfully: 1-1-17
+2025/04/30 09:29:19 [pub 1] uploaded seq 17 (took 820.057084ms)
+2025/04/30 09:29:22 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:18.954026+02:00","publisherID":4,"seq":16} 2025-04-30 09:29:19 +0200 CEST 305 1 1-4-16 [[214 216 28 78 71 11 89 121 240 180 192 6 199 19 69 195 204 170 118 19 16 234 49 101 147 8 170 154 151 227 241 45]]}
+2025/04/30 09:29:22 {"data_name":"1-4-16","event":"message_latency","latency_ms":3091,"sender":"1","timestamp":"2025-04-30T09:29:22.045171+02:00"}
+2025/04/30 09:29:22 {"confirmed":52,"event":"tx_confirmed","node":"1","seq":16,"timestamp":"2025-04-30T09:29:22.045183+02:00"}
+2025/04/30 09:29:22 {"confirmed":53,"event":"tx_confirmed","node":"1","seq":16,"timestamp":"2025-04-30T09:29:22.045316+02:00"}
+2025/04/30 09:29:22 {"confirmed":54,"event":"tx_confirmed","node":"1","seq":17,"timestamp":"2025-04-30T09:29:22.045331+02:00"}
+2025/04/30 09:29:22 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:18.942448+02:00","publisherID":1,"seq":17} 2025-04-30 09:29:19 +0200 CEST 306 1 1-1-17 [[21 136 83 176 56 236 20 130 247 186 55 60 102 192 121 72 17 223 63 238 213 14 149 85 29 49 1 61 84 233 106 136]]}
+2025/04/30 09:29:22 {"data_name":"1-1-17","event":"message_latency","latency_ms":3116,"sender":"1","timestamp":"2025-04-30T09:29:22.058496+02:00"}
+2025/04/30 09:29:22 Processing message: {{"instance":"1","publishedAt":"2025-04-30T09:29:18.30974+02:00","publisherID":2,"seq":16} 2025-04-30 09:29:19 +0200 CEST 304 1 1-2-16 [[1 2 115 14 143 137 158 141 27 56 28 79 146 154 83 56 160 231 65 108 165 175 170 137 111 145 136 210 239 187 62 235]]}
+2025/04/30 09:29:22 {"data_name":"1-2-16","event":"message_latency","latency_ms":3748,"sender":"1","timestamp":"2025-04-30T09:29:22.058553+02:00"}
+2025/04/30 09:29:22 Transaction sent: 0xcab7e6c0d167e0bce2313ee938cced35a494178b1c2644d566e2ab5cae487b8a with nonce 7937
+2025/04/30 09:29:22 Stored transaction hash 0xcab7e6c0d167e0bce2313ee938cced35a494178b1c2644d566e2ab5cae487b8a with message hash f09a9fccb0f4f7f221f6e8a2723fcb3f19084eb023d13886ee152f6e56420347
+2025/04/30 09:29:22 Confirmed message hash f09a9fccb0f4f7f221f6e8a2723fcb3f19084eb023d13886ee152f6e56420347
+2025/04/30 09:29:22 Message published successfully: 1-2-17
+2025/04/30 09:29:22 [pub 2] uploaded seq 17 (took 451.532416ms)
+2025/04/30 09:29:22 Transaction sent: 0xfc36f41d8991d3a7717873052bfd7a6af333a6d4131836bf863edf2a819a910a with nonce 7938
+2025/04/30 09:29:22 Stored transaction hash 0xfc36f41d8991d3a7717873052bfd7a6af333a6d4131836bf863edf2a819a910a with message hash 7069e2c6b320d1ab2f8593118b58dbbeba4ac6e3a8baaff0bf807364bcc92b81
+2025/04/30 09:29:22 Confirmed message hash 7069e2c6b320d1ab2f8593118b58dbbeba4ac6e3a8baaff0bf807364bcc92b81
+2025/04/30 09:29:22 Message published successfully: 1-4-17
+2025/04/30 09:29:22 [pub 4] uploaded seq 17 (took 715.654416ms)
+2025/04/30 09:29:22 Transaction sent: 0x9024fa6f0a98a2fa7f60979374168bd1794215b1a0a66882359052385e97af21 with nonce 7939
+2025/04/30 09:29:22 Stored transaction hash 0x9024fa6f0a98a2fa7f60979374168bd1794215b1a0a66882359052385e97af21 with message hash dd782e64cde6f12871a38bffef86a9f80290fe12d6eff8f539d84863306808d3
+2025/04/30 09:29:22 Confirmed message hash dd782e64cde6f12871a38bffef86a9f80290fe12d6eff8f539d84863306808d3
+2025/04/30 09:29:22 Message published successfully: 1-1-18
+2025/04/30 09:29:22 [pub 1] uploaded seq 18 (took 1.008681708s)
+2025/04/30 09:29:23 {"elapsed_seconds":51.543719833,"event":"periodic_stats","messages_per_sec":1.0999993537503798,"messages_sent":57,"node":"1","timestamp":"2025-04-30T09:29:23.720009+02:00","total_messages":54}
+2025/04/30 09:29:23 {"event":"node_processing_stats","interval_msgs_per_sec":1.2000038900526104,"messages_per_sec":1.0999890487070292,"messages_processed":55,"timestamp":"2025-04-30T09:29:23.720009+02:00","uptime_seconds":50.000497791}
+2025/04/30 09:29:24 {"avg_processing_rate":1.0456856197232773,"avg_publish_rate":1.0266731539101268,"end_to_end_ratio":1.0185185185185186,"event":"experiment_summary","messages_published":54,"messages_received":55,"node":"1","run_duration_sec":52.59707025,"timestamp":"2025-04-30T09:29:24.773276+02:00","total_messages_sent":57}
+2025/04/30 09:29:24 {"event":"application_shutdown","node":"1","timestamp":"2025-04-30T09:29:24.773456+02:00"}

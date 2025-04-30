@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -24,7 +25,7 @@ import (
 )
 
 type txMeta struct {
-	Seq  int64
+	Seq  uint64
 	Node string
 }
 
@@ -54,13 +55,14 @@ type ContractInteractionInterface struct {
 
 	pending   map[common.Hash]txMeta // pending transactions
 	confirmed int64
+	sent      int64
 }
 
 func Init(contractAddress, privateKey string) (*ContractInteractionInterface, error) {
 	log.Println("Initializing contract interaction…")
 
 	// RPC + WS
-	rpcCli, err := rpc.Dial("https://api.avax-test.network/ext/bc/C/rpc")
+	rpcCli, err := rpc.Dial(NetworkEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("dial RPC: %w", err)
 	}
@@ -109,7 +111,7 @@ func Init(contractAddress, privateKey string) (*ContractInteractionInterface, er
 	}
 	ci.dependencyTracker = NewDependencyTracker(ci)
 
-	go ci.pollReceipts() // background confirmation handler
+	go ci.watchNewHeads()
 
 	if err := ci.RetriveCurrentDataID(); err != nil {
 		return nil, err
@@ -117,7 +119,7 @@ func Init(contractAddress, privateKey string) (*ContractInteractionInterface, er
 	return ci, nil
 }
 
-func (c *ContractInteractionInterface) Upload(payloadBytes []byte, owner, dataName string, seq int64, dependencies [][32]byte, input []byte) error {
+func (c *ContractInteractionInterface) Upload(payloadBytes []byte, owner, dataName string, seq uint64, dependencies [][32]byte, input []byte) error {
 	if len(payloadBytes) == 0 || len(owner) == 0 || len(dataName) == 0 {
 		return fmt.Errorf("invalid input data")
 	}
@@ -246,11 +248,6 @@ func (c *ContractInteractionInterface) RetriveCurrentDataID() error {
 	}
 
 	log.Println("Retrieving current data ID...")
-	log.Println("Input data:", input)
-	log.Println("Contract address:", c.contractAddress.Hex())
-	log.Println("Private key:", c.privateKey)
-	log.Println("Client:", c.client)
-	log.Println("Context:", ctx)
 
 	result, err := c.client.CallContract(ctx, ethereum.CallMsg{
 		To:   &c.contractAddress,
@@ -310,49 +307,279 @@ func (c *ContractInteractionInterface) GetPackedInput(data, owner, dataName stri
 	return c.contractABI.Pack("publishMessage", []byte(data), owner, dataName, deps)
 }
 
+func (c *ContractInteractionInterface) watchNewHeads() {
+	const (
+		maxBatch = 100 // how many receipts to query per block
+		maxStale = 50  // after N blocks without a receipt, give up
+	)
+
+	type pendingInfo struct {
+		meta    txMeta // owner / seq (for stats)
+		addedAt uint64 // block number when we first saw the tx
+	}
+
+	// keep a *blockNumber* → []*common.Hash index so we can time-out stale txs
+	staleIndex := make(map[uint64][]common.Hash)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// open a **web-socket** connection – we need the WS endpoint for
+	// subscriptions, *not* the HTTP-JSON-RPC one.
+	wsCli, err := ethclient.Dial(NetworkEndpoint)
+	if err != nil {
+		log.Fatalf("newHeads dial: %v", err)
+	}
+
+	// subscribe to heads
+	headers := make(chan *types.Header, 64)
+	sub, err := wsCli.SubscribeNewHead(ctx, headers)
+	if err != nil {
+		log.Fatalf("newHeads subscribe: %v", err)
+	}
+
+	log.Println("newHeads watcher started")
+
+	for {
+		select {
+		case err := <-sub.Err():
+			log.Fatalf("newHeads subscription error: %v", err)
+
+		case hdr := <-headers:
+			number := hdr.Number.Uint64()
+			// ----------------------------------------------------------------
+			// 1) collect a *snapshot* of hashes that are still pending
+			// ----------------------------------------------------------------
+			c.txHashMapLock.RLock()
+			pendingNow := make([]common.Hash, 0, len(c.pending))
+			for h := range c.pending {
+				pendingNow = append(pendingNow, h)
+			}
+			c.txHashMapLock.RUnlock()
+
+			if len(pendingNow) == 0 {
+				continue // nothing to do for this block
+			}
+
+			// ----------------------------------------------------------------
+			// 2) batch receipts (bounded)
+			// ----------------------------------------------------------------
+			for start := 0; start < len(pendingNow); start += maxBatch {
+				end := start + maxBatch
+				if end > len(pendingNow) {
+					end = len(pendingNow)
+				}
+
+				batch := make([]rpc.BatchElem, 0, end-start)
+				for _, h := range pendingNow[start:end] {
+					batch = append(batch, rpc.BatchElem{
+						Method: "eth_getTransactionReceipt",
+						Args:   []any{h},
+						Result: new(types.Receipt),
+					})
+				}
+				if err := c.rpcClient.BatchCallContext(ctx, batch); err != nil {
+					log.Printf("batch receipt call: %v", err)
+					continue
+				}
+
+				// ------------------------------------------------------------
+				// 3) process results
+				// ------------------------------------------------------------
+				for _, be := range batch {
+					r := be.Result.(*types.Receipt)
+					if r == nil || r.BlockNumber == nil { // still pending
+						continue
+					}
+					if r.Status != types.ReceiptStatusSuccessful { // failed tx
+						c.removePending(r.TxHash, false)
+						continue
+					}
+					// success: mark confirmed
+					c.removePending(r.TxHash, true)
+				}
+			}
+
+			// ----------------------------------------------------------------
+			// 4) mark when each hash became “stale” so we can eventually drop
+			// ----------------------------------------------------------------
+			staleBlock := number - maxStale
+			for h := range c.pending {
+				info := c.pending[h]
+				staleIndex[info.Seq] = append(staleIndex[info.Seq], h) // simplified index
+			}
+			if hashes := staleIndex[staleBlock]; len(hashes) > 0 {
+				for _, h := range hashes {
+					c.removePending(h, false) // drop as “gave up”
+				}
+				delete(staleIndex, staleBlock)
+			}
+		}
+	}
+}
+
+// removePending takes care of both the map and the stats counter.
+func (c *ContractInteractionInterface) removePending(h common.Hash, confirmed bool) {
+	c.txHashMapLock.Lock()
+	info, ok := c.pending[h]
+	if ok {
+		delete(c.pending, h)
+	}
+	c.txHashMapLock.Unlock()
+
+	if ok && confirmed {
+		newTotal := atomic.AddInt64(&c.confirmed, 1)
+		LogJSON(map[string]any{
+			"event":     "tx_confirmed",
+			"node":      info.Node,
+			"seq":       info.Seq,
+			"confirmed": newTotal,
+		})
+	}
+}
+
 func (c *ContractInteractionInterface) getStoredData(id *big.Int) (t.StoredData, error) {
 	var out t.StoredData
+
+	// 1) Pack & call
 	in, err := c.contractABI.Pack("getStoredData", id)
 	if err != nil {
 		return out, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	ret, err := c.client.CallContract(ctx, ethereum.CallMsg{To: &c.contractAddress, Data: in}, nil)
+	ret, err := c.client.CallContract(
+		context.Background(),
+		ethereum.CallMsg{To: &c.contractAddress, Data: in},
+		nil,
+	)
 	if err != nil {
 		return out, err
 	}
-	if err := c.contractABI.UnpackIntoInterface(&out, "getStoredData", ret); err != nil {
+
+	// 2) Unpack → always one slot
+	vals, err := c.contractABI.Unpack("getStoredData", ret)
+	if err != nil {
 		return out, err
 	}
-	return out, nil
+	if len(vals) != 1 {
+		return out, fmt.Errorf("expected 1 output, got %d", len(vals))
+	}
+
+	// Helper to normalize dependencies from either [][]byte or [][32]byte
+	normalizeDeps := func(raw any) ([][32]byte, error) {
+		// Try the common case: a Go slice of [32]byte
+		if arr32, ok := raw.([][32]byte); ok {
+			return arr32, nil
+		}
+		// Fallback: a slice of byte‐slices
+		if bb, ok := raw.([][]byte); ok {
+			deps := make([][32]byte, len(bb))
+			for i, b := range bb {
+				copy(deps[i][:], b)
+			}
+			return deps, nil
+		}
+		return nil, fmt.Errorf("cannot normalize deps type %T", raw)
+	}
+
+	v := vals[0]
+
+	// 3a) CASE A: struct with fields
+	if rv := reflect.ValueOf(v); rv.Kind() == reflect.Struct {
+		// Extract fields by name
+		data := rv.FieldByName("Data").Bytes()
+		owner := rv.FieldByName("Owner").String()
+		name := rv.FieldByName("DataName").String()
+		ts := rv.FieldByName("MessageTimestamp").Interface().(*big.Int)
+		did := rv.FieldByName("DataId").Interface().(*big.Int)
+
+		rawDepVal := rv.FieldByName("Dependencies").Interface()
+		deps, err := normalizeDeps(rawDepVal)
+		if err != nil {
+			return out, err
+		}
+
+		return t.StoredData{
+			Data:             data,
+			Owner:            owner,
+			DataName:         name,
+			MessageTimestamp: ts,
+			DataId:           did,
+			Dependencies:     deps,
+		}, nil
+	}
+
+	// 3b) CASE B: []any tuple
+	tuple, ok := v.([]any)
+	if !ok || len(tuple) != 6 {
+		return out, fmt.Errorf("unexpected return shape: %T", v)
+	}
+	data := tuple[0].([]byte)
+	owner := tuple[1].(string)
+	name := tuple[2].(string)
+	ts := tuple[3].(*big.Int)
+	did := tuple[4].(*big.Int)
+
+	deps, err := normalizeDeps(tuple[5])
+	if err != nil {
+		return out, err
+	}
+
+	return t.StoredData{
+		Data:             data,
+		Owner:            owner,
+		DataName:         name,
+		MessageTimestamp: ts,
+		DataId:           did,
+		Dependencies:     deps,
+	}, nil
 }
 
 func (c *ContractInteractionInterface) handleEvent(vLog types.Log, sink chan<- t.Message) {
 	if len(vLog.Topics) == 0 || vLog.Topics[0] != c.fastEventID {
-		return
-	}
-	var ev struct {
-		DataHash [32]byte
-		DataId   *big.Int
-	}
-	if err := c.contractABI.UnpackIntoInterface(&ev, "FastBroadcast", vLog.Data); err != nil {
-		log.Printf("unpack FastBroadcast: %v", err)
+		fmt.Printf("Invalid event ID: %s\n", vLog.Topics[0].Hex())
 		return
 	}
 
-	stored, err := c.getStoredData(ev.DataId)
+	if len(vLog.Topics) < 3 {
+		return
+	}
+
+	dataHash := common.BytesToHash(vLog.Topics[1].Bytes())
+	dataId := new(big.Int).SetBytes(vLog.Topics[2].Bytes())
+
+	stored, err := c.getStoredData(dataId)
 	if err != nil {
-		log.Printf("getStoredData: %v", err)
-		return
+		if strings.Contains(err.Error(), "invalid id") {
+			// retry up to 2 more times
+			for i := 0; i < 2; i++ {
+				time.Sleep(200 * time.Millisecond)
+				stored, err = c.getStoredData(dataId)
+				if err == nil {
+					break
+				}
+				if !strings.Contains(err.Error(), "invalid id") {
+					// some other error—log and bail
+					log.Printf("[handleEvent] unexpected error fetching stored data: %v", err)
+					return
+				}
+			}
+			if err != nil {
+				// still invalid after retries—drop the event
+				log.Printf("[handleEvent] dataId %s still not indexed, skipping", dataId)
+				return
+			}
+		} else {
+			// completely different error—log and bail
+			log.Printf("[handleEvent] error calling getStoredData(%s): %v", dataId, err)
+			return
+		}
 	}
-
 	hash := crypto.Keccak256Hash(stored.Data)
 	var h32 [32]byte
 	copy(h32[:], hash[:])
 
-	if h32 != ev.DataHash {
-		log.Printf("hash mismatch id %s", ev.DataId)
+	if h32 != dataHash {
+		log.Printf("hash mismatch id %s", dataId)
 		return
 	}
 
@@ -371,65 +598,17 @@ func (c *ContractInteractionInterface) handleEvent(vLog types.Log, sink chan<- t
 	}
 	sink <- msg
 }
-func (c *ContractInteractionInterface) pollReceipts() {
-	for {
-		// Build a batch of up to 100 tx hashes
-		elems := make([]rpc.BatchElem, 0, 100)
-		for i := 0; i < cap(elems); i++ {
-			select {
-			case h := <-c.receiptQueue:
-				elems = append(elems, rpc.BatchElem{
-					Method: "eth_getTransactionReceipt",
-					Args:   []any{h},
-					Result: &types.Receipt{},
-				})
-			default:
-				i = cap(elems) // break outer for
-			}
-		}
-		if len(elems) == 0 {
-			time.Sleep(200 * time.Millisecond)
-			continue
-		}
-		if err := c.rpcClient.BatchCall(elems); err != nil {
-			log.Printf("batch receipts: %v", err)
-
-		}
-		for _, be := range elems {
-			r, ok := be.Result.(*types.Receipt)
-			if !ok || r == nil || r.Status != types.ReceiptStatusSuccessful {
-				continue
-			}
-			h := r.TxHash
-
-			c.txHashMapLock.Lock()
-			meta, present := c.pending[h]
-			if present {
-				delete(c.pending, h)
-			}
-			c.txHashMapLock.Unlock()
-
-			if present {
-				atomic.AddInt64(&c.confirmed, 1)
-
-				LogJSON(map[string]any{ // use your helper
-					"event": "message_published",
-					"node":  meta.Node,
-					"seq":   meta.Seq,
-				})
-			}
-		}
-
-		// Optional: handle receipts here (update cost metrics, etc.)
-	}
-}
 
 func (c *ContractInteractionInterface) Confirmed() int64 {
 	return atomic.LoadInt64(&c.confirmed)
 }
 
+func (c *ContractInteractionInterface) Sent() int64 {
+	return atomic.LoadInt64(&c.sent)
+}
+
 // Modified executeTransaction function to wait for transaction confirmation
-func (c *ContractInteractionInterface) executeTransaction(payloadBytes []byte, input []byte, owner string, seq int64) error {
+func (c *ContractInteractionInterface) executeTransaction(payloadBytes []byte, input []byte, owner string, seq uint64) error {
 	// Lock to synchronize transaction submissions
 	c.txLock.Lock()
 	defer c.txLock.Unlock()
@@ -508,6 +687,7 @@ func (c *ContractInteractionInterface) executeTransaction(payloadBytes []byte, i
 		}
 		return fmt.Errorf("failed to send transaction: %v", err)
 	}
+	atomic.AddInt64(&c.sent, 1)
 	meta := txMeta{Seq: seq, Node: owner}
 	c.txHashMapLock.Lock()
 	c.pending[signedTx.Hash()] = meta

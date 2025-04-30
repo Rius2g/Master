@@ -22,8 +22,8 @@ import (
 var (
 	instanceID      = flag.String("instance", "node1", "Unique instance identifier")
 	stressMode      = flag.Bool("stress", false, "Enable stress test mode (continuous publishing of messages)")
-	publishInterval = flag.Duration("publishInterval", 100*time.Millisecond, "Interval between publishing messages")
-	envFile         = flag.String("env-file", ".env", "Path to environment file")
+	publishInterval = flag.Duration("publishInterval", 1*time.Millisecond, "Interval between publishing messages")
+	envFile         = flag.String("env-file", ".env.high_throughput", "Path to environment file")
 	concurrency     = flag.Int("concurrency", 1, "Number of concurrent message publishers")
 )
 
@@ -33,19 +33,23 @@ var (
 	publishMutex sync.Mutex // Mutex to protect the messages published counter
 )
 
-func startPublisher(ctx context.Context, contractClient *contract.ContractInteractionInterface) {
-	var seq int64 = 1
+func startPublisher(ctx context.Context, contractClient *contract.ContractInteractionInterface, pubID int) {
+	seq := uint64(1)
 	var lastDep [32]byte
+
+	ticker := time.NewTicker(*publishInterval)
+	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case <-ticker.C:
 			// Build payload
 			payload := map[string]any{
 				"instance":    *instanceID,
 				"seq":         seq,
+				"publisherID": pubID,
 				"publishedAt": time.Now().Format(time.RFC3339Nano),
 			}
 			payloadBytes, _ := json.Marshal(payload)
@@ -57,42 +61,30 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 			}
 
 			// Pack the transaction input
-			dataName := fmt.Sprintf("%s-%d", *instanceID, seq)
+			dataName := fmt.Sprintf("%s-%d-%d", *instanceID, pubID, seq)
 			input, err := contractClient.GetPackedInput(string(payloadBytes), *instanceID, dataName, deps...)
 			if err != nil {
-				log.Printf("Failed to pack input: %v", err)
-				time.Sleep(500 * time.Millisecond)
+				log.Printf("[pub %d] pack error: %v", pubID, err)
 				continue
 			}
 
-			// Precompute message hash
-			newMessageHash := crypto.Keccak256Hash(payloadBytes)
+			// Precompute message hash (for the *next* iteration)
+			newHash := crypto.Keccak256Hash(payloadBytes)
 			var fixedHash [32]byte
-			copy(fixedHash[:], newMessageHash[:])
+			copy(fixedHash[:], newHash[:])
 
-			fmt.Printf("Hash: %x\n", newMessageHash)
-
-			// Upload using payloadBytes and input
+			// Upload
 			start := time.Now()
-			err = contractClient.Upload(payloadBytes, *instanceID, dataName, seq, deps, input)
-			elapsed := time.Since(start)
-
-			if err != nil {
-				contract.LogJSON(map[string]any{
-					"event": "publish_error",
-					"node":  *instanceID,
-					"seq":   seq,
-					"error": err.Error(),
-				})
-				time.Sleep(500 * time.Millisecond)
+			if err := contractClient.Upload(payloadBytes, *instanceID, dataName, seq, deps, input); err != nil {
 				continue
 			}
+			elapsed := time.Since(start)
+			log.Printf("[pub %d] uploaded seq %d (took %s)", pubID, seq, elapsed)
 
-			// Only update lastDep after successful upload
+			// **Only now** that Upload succeeded (and its confirmation has been recorded),
+			// update lastDep for the next message’s dependencies.
 			lastDep = fixedHash
 			seq++
-
-			log.Printf("[Publisher] Successfully uploaded seq %d (took %s)", seq, elapsed)
 		}
 	}
 }
@@ -166,11 +158,14 @@ func main() {
 	}()
 
 	// Start publishers as per your chosen mode.
+	// Start publishers as per your chosen mode.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	if *stressMode {
-		go startPublisher(ctx, c)
+		for i := 0; i < *concurrency; i++ {
+			go startPublisher(ctx, c, i+1) // pubID from 1..concurrency
+		}
 	}
 
 	go func() {
@@ -185,6 +180,8 @@ func main() {
 			case t := <-statsTicker.C:
 				publishMutex.Lock()
 				currentCount := c.Confirmed()
+				sent := c.Sent()
+				fmt.Printf("Current count: %d\n", currentCount)
 				ratePerSecond := float64(currentCount-lastCount) / t.Sub(lastTime).Seconds()
 				publishMutex.Unlock()
 
@@ -193,6 +190,7 @@ func main() {
 					"event":            "periodic_stats",
 					"node":             *instanceID,
 					"messages_per_sec": ratePerSecond,
+					"messages_sent":    sent,
 					"total_messages":   currentCount,
 					"elapsed_seconds":  t.Sub(runStartTime).Seconds(),
 				}
@@ -224,6 +222,7 @@ func main() {
 
 	endToEndRatio := 0.0
 	confirmed := c.Confirmed()
+	fmt.Printf("Confirmed messages: %d\n", confirmed)
 	if confirmed > 0 {
 		endToEndRatio = float64(messagesReceived) / float64(confirmed)
 	}
@@ -238,6 +237,7 @@ func main() {
 		"messages_received":   messagesReceived,
 		"avg_publish_rate":    float64(confirmed) / durationSec,
 		"avg_processing_rate": procRate,
+		"total_messages_sent": c.Sent(),
 		"end_to_end_ratio":    endToEndRatio,
 	}
 	contract.LogJSON(summary)
