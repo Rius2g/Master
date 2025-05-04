@@ -40,6 +40,15 @@ contract LamportClock {
         for (uint256 i; i < n; ++i) out[i] = storedData[fromId + i];
     }
 
+      function getDependencyTimestamps(bytes32[] memory dependencies) public view returns (uint256[] memory) {
+        uint256[] memory timestamps = new uint256[](dependencies.length);
+
+        for (uint i = 0; i < dependencies.length; i++) {
+            timestamps[i] = messageTimestamps[dependencies[i]];
+        }
+        return timestamps;
+    }
+
     /* ─── publish ─────────────────────────────────── */
     function publishMessage(
         bytes calldata   _data,

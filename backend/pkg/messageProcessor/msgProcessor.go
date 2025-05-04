@@ -19,6 +19,7 @@ type MessageProcessor struct {
 	errChannel         chan error
 	ctx                context.Context
 	cancel             context.CancelFunc
+	ShouldReplyTo      func(t.Message) bool
 	messageHashes      map[string][32]byte
 	messagesToProcess  int
 	messagesProcessed  int
@@ -115,8 +116,6 @@ func (mp *MessageProcessor) Start() {
 				if err := mp.processMessage(msg); err != nil {
 					fmt.Printf("Error processing message: %v\n", err)
 					mp.errChannel <- err
-				} else {
-					fmt.Printf("Successfully processed message #%d\n", messageCount)
 				}
 
 			case <-mp.ctx.Done():
@@ -143,7 +142,7 @@ func (mp *MessageProcessor) processMessage(message t.Message) error {
 	mp.messageHashes[message.DataName] = depHash
 
 	// Check if we should reply
-	if shouldReplyTo(message) {
+	if mp.ShouldReplyTo(message) {
 		dependencies := [][32]byte{depHash}
 
 		// --- Build reply payload ---
@@ -194,10 +193,6 @@ func extractTimestampFromMessage(message t.Message) string {
 		}
 	}
 	return ""
-}
-
-func shouldReplyTo(message t.Message) bool {
-	return false // Implement your logic here
 }
 
 func (mp *MessageProcessor) GetDependencyHash(dataName string) ([32]byte, bool) {

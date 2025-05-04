@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,6 +26,7 @@ var (
 	publishInterval = flag.Duration("publishInterval", 1*time.Millisecond, "Interval between publishing messages")
 	envFile         = flag.String("env-file", ".env.high_throughput", "Path to environment file")
 	concurrency     = flag.Int("concurrency", 1, "Number of concurrent message publishers")
+	numberOfNodes   = flag.Int("numberOfNodes", 1, "Number of nodes in the network")
 )
 
 var (
@@ -74,12 +76,17 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 			copy(fixedHash[:], newHash[:])
 
 			// Upload
-			start := time.Now()
 			if err := contractClient.Upload(payloadBytes, *instanceID, dataName, seq, deps, input); err != nil {
 				continue
 			}
-			elapsed := time.Since(start)
-			log.Printf("[pub %d] uploaded seq %d (took %s)", pubID, seq, elapsed)
+
+			contract.LogJSON(map[string]any{
+				"event":        "message_published",
+				"node":         *instanceID,
+				"seq":          seq,
+				"timestamp":    time.Now().UTC().Format(time.RFC3339),
+				"dependencies": encodeDeps(deps),
+			})
 
 			// **Only now** that Upload succeeded (and its confirmation has been recorded),
 			// update lastDep for the next message’s dependencies.
@@ -89,10 +96,20 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 	}
 }
 
+func encodeDeps(deps [][32]byte) []string {
+	out := make([]string, len(deps))
+	for i, dep := range deps {
+		out[i] = hex.EncodeToString(dep[:])
+	}
+	return out
+}
+
 // Setup logging to a file
 func setupLogging() {
 	var err error
-	logFile, err = os.OpenFile("experiment_results.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	numberOfNodesStr := fmt.Sprintf("%d", *numberOfNodes)
+	logFilePath := fmt.Sprintf("logs/experiment_results_%s.log", numberOfNodesStr)
+	logFile, err = os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("failed to open log file: %v", err)
 	}
@@ -112,6 +129,12 @@ func main() {
 	flag.Parse()
 	runStartTime = time.Now()
 
+	contract.LogJSON(map[string]any{
+		"event":     "application_start",
+		"node":      *instanceID,
+		"timestamp": runStartTime.UTC().Format(time.RFC3339),
+	})
+
 	// Set GOMAXPROCS and setup logging as usual.
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
@@ -129,7 +152,7 @@ func main() {
 	}
 
 	// Initialize your contract as before.
-	contractAddress := os.Getenv("CONTRACT_ADDRESS")
+	contractAddress := "0x215acfdA10D7877C4486ca7bB89Db093bfF15Fe0"
 	privateKeyHex := os.Getenv("PRIVATE_KEY")
 	c, err := contract.Init(contractAddress, privateKeyHex)
 	if err != nil {
@@ -158,13 +181,12 @@ func main() {
 	}()
 
 	// Start publishers as per your chosen mode.
-	// Start publishers as per your chosen mode.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	if *stressMode {
 		for i := 0; i < *concurrency; i++ {
-			go startPublisher(ctx, c, i+1) // pubID from 1..concurrency
+			go startPublisher(ctx, c, i+1)
 		}
 	}
 
@@ -220,12 +242,8 @@ func main() {
 
 	}
 
-	endToEndRatio := 0.0
 	confirmed := c.Confirmed()
 	fmt.Printf("Confirmed messages: %d\n", confirmed)
-	if confirmed > 0 {
-		endToEndRatio = float64(messagesReceived) / float64(confirmed)
-	}
 
 	// Log the summary of the experiment with cost details
 
@@ -238,7 +256,6 @@ func main() {
 		"avg_publish_rate":    float64(confirmed) / durationSec,
 		"avg_processing_rate": procRate,
 		"total_messages_sent": c.Sent(),
-		"end_to_end_ratio":    endToEndRatio,
 	}
 	contract.LogJSON(summary)
 
@@ -248,7 +265,6 @@ func main() {
 	fmt.Printf("Run duration: %.2f seconds\n", durationSec)
 	fmt.Printf("Average publish rate: %.2f messages/sec\n", float64(confirmed)/durationSec)
 	fmt.Printf("Average processing rate: %.2f messages/sec\n", procRate)
-	fmt.Printf("End-to-end ratio: %.2f%%\n", endToEndRatio*100)
 
 	fmt.Println("========================================")
 

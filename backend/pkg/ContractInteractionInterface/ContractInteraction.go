@@ -29,6 +29,12 @@ type txMeta struct {
 	Node string
 }
 
+type txInfo struct {
+	meta         txMeta
+	dependencies [][32]byte
+	gasPrice     *big.Int
+}
+
 const NetworkEndpoint = "wss://api.avax-test.network/ext/bc/C/ws"
 
 type ContractInteractionInterface struct {
@@ -53,7 +59,7 @@ type ContractInteractionInterface struct {
 	fastEventID  common.Hash      // selector of FastBroadcast
 	receiptQueue chan common.Hash // async confirmation
 
-	pending   map[common.Hash]txMeta // pending transactions
+	pending   map[common.Hash]txInfo // pending transactions
 	confirmed int64
 	sent      int64
 }
@@ -62,6 +68,9 @@ func Init(contractAddress, privateKey string) (*ContractInteractionInterface, er
 	log.Println("Initializing contract interaction…")
 
 	// RPC + WS
+	if contractAddress == "" || privateKey == "" {
+		log.Fatalf("Contract address and private key are required")
+	}
 	rpcCli, err := rpc.Dial(NetworkEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("dial RPC: %w", err)
@@ -106,7 +115,7 @@ func Init(contractAddress, privateKey string) (*ContractInteractionInterface, er
 
 		fastEventID:  contractABI.Events["FastBroadcast"].ID,
 		receiptQueue: make(chan common.Hash, 10_000),
-		pending:      make(map[common.Hash]txMeta),
+		pending:      make(map[common.Hash]txInfo),
 		confirmed:    0,
 	}
 	ci.dependencyTracker = NewDependencyTracker(ci)
@@ -171,7 +180,7 @@ func (c *ContractInteractionInterface) Upload(payloadBytes []byte, owner, dataNa
 	}
 
 	// Send transaction using the input you already packed externally
-	if err := c.executeTransaction(payloadBytes, input, owner, seq); err != nil {
+	if err := c.executeTransaction(payloadBytes, input, dependencies, owner, seq); err != nil {
 		return fmt.Errorf("failed to execute transaction: %v", err)
 	}
 
@@ -406,7 +415,7 @@ func (c *ContractInteractionInterface) watchNewHeads() {
 			staleBlock := number - maxStale
 			for h := range c.pending {
 				info := c.pending[h]
-				staleIndex[info.Seq] = append(staleIndex[info.Seq], h) // simplified index
+				staleIndex[info.meta.Seq] = append(staleIndex[info.meta.Seq], h) // simplified index
 			}
 			if hashes := staleIndex[staleBlock]; len(hashes) > 0 {
 				for _, h := range hashes {
@@ -431,8 +440,8 @@ func (c *ContractInteractionInterface) removePending(h common.Hash, confirmed bo
 		newTotal := atomic.AddInt64(&c.confirmed, 1)
 		LogJSON(map[string]any{
 			"event":     "tx_confirmed",
-			"node":      info.Node,
-			"seq":       info.Seq,
+			"node":      info.meta.Node,
+			"seq":       info.meta.Seq,
 			"confirmed": newTotal,
 		})
 	}
@@ -597,6 +606,15 @@ func (c *ContractInteractionInterface) handleEvent(vLog types.Log, sink chan<- t
 		Dependencies: deps,
 	}
 	sink <- msg
+
+	orderingKey := (uint64(vLog.BlockNumber) << 32) | uint64(vLog.TxIndex)
+
+	LogJSON(map[string]any{
+		"event":        "message_received",
+		"node":         stored.Owner,
+		"seq":          stored.DataId,
+		"ordering_key": orderingKey,
+	})
 }
 
 func (c *ContractInteractionInterface) Confirmed() int64 {
@@ -608,114 +626,118 @@ func (c *ContractInteractionInterface) Sent() int64 {
 }
 
 // Modified executeTransaction function to wait for transaction confirmation
-func (c *ContractInteractionInterface) executeTransaction(payloadBytes []byte, input []byte, owner string, seq uint64) error {
-	// Lock to synchronize transaction submissions
+func (c *ContractInteractionInterface) executeTransaction(
+	payloadBytes []byte,
+	input []byte,
+	deps [][32]byte,
+	owner string,
+	seq uint64,
+) error {
+	// 1) Synchronize across goroutines
 	c.txLock.Lock()
 	defer c.txLock.Unlock()
 
+	// 2) Prepare signer and chain ID
 	privkey, err := crypto.HexToECDSA(strings.TrimPrefix(c.privateKey, "0x"))
 	if err != nil {
-		return fmt.Errorf("failed to parse private key: %v", err)
+		return fmt.Errorf("failed to parse private key: %w", err)
 	}
+	chainID := big.NewInt(43113)
 
-	auth, err := bind.NewKeyedTransactorWithChainID(privkey, big.NewInt(43113))
-	if err != nil {
-		return fmt.Errorf("failed HexToECDSA: %v", err)
-	}
-
-	// Use a shorter context timeout for throughput
+	// 3) Build base transaction parameters
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Get gas price with a separate context
 	gasPriceCtx, gasPriceCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer gasPriceCancel()
 
 	gasPrice, err := c.client.SuggestGasPrice(gasPriceCtx)
 	if err != nil {
-		gasPrice = big.NewInt(25000000000) // 25 Gwei
-		log.Printf("Using fallback gas price: %s", gasPrice.String())
+		gasPrice = big.NewInt(25_000_000_000) // fallback 25 Gwei
+		log.Printf("Using fallback gas price: %s", gasPrice)
 	}
 
-	// Add a cap to prevent extremely high gas prices
-	if gasPrice.Cmp(big.NewInt(100000000000)) > 0 { // If more than 100 Gwei
-		gasPrice = big.NewInt(100000000000) // 100 Gwei
-		log.Printf("Gas price suspiciously high, capping at 100 Gwei")
+	// Cap at 100 Gwei
+	capPrice := big.NewInt(100_000_000_000)
+	if gasPrice.Cmp(capPrice) > 0 {
+		gasPrice = capPrice
 	}
 
-	// Use reasonable gas limit to avoid estimation
-	gasLimit := uint64(8000000)
-	// Get nonce from local manager instead of RPC call
+	// 4) Determine nonce
+	auth, _ := bind.NewKeyedTransactorWithChainID(privkey, chainID)
 	nonce := c.nonceManager.GetNonce(auth.From)
-
-	// Every 50 transactions, try to resync our nonce with the network
 	if nonce%50 == 0 {
 		go c.resyncNonce(auth.From)
 	}
 
+	// 5) Build & sign first attempt
+	gasLimit := uint64(8_000_000)
 	tx := types.NewTransaction(nonce, c.contractAddress, big.NewInt(0), gasLimit, gasPrice, input)
-
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(43113)), privkey)
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privkey)
 	if err != nil {
-		return fmt.Errorf("failed to sign transaction: %v", err)
+		return fmt.Errorf("failed to sign tx: %w", err)
 	}
 
+	// 6) Attempt to send
 	err = c.client.SendTransaction(ctx, signedTx)
-	if err != nil {
-		if strings.Contains(err.Error(), "nonce too low") ||
-			strings.Contains(err.Error(), "replacement transaction underpriced") {
-			// If nonce error, try to recover by fetching from network
-			log.Printf("Nonce error detected: %v, attempting to resync nonce", err)
-			if resyncErr := c.resyncNonce(auth.From); resyncErr == nil {
-				// Retry with new nonce
-				newNonce := c.nonceManager.GetNonce(auth.From)
-				newTx := types.NewTransaction(newNonce, c.contractAddress, big.NewInt(0), gasLimit, gasPrice, input)
-				newSignedTx, signErr := types.SignTx(newTx, types.NewEIP155Signer(big.NewInt(43113)), privkey)
-				if signErr != nil {
-					return fmt.Errorf("failed to sign retry transaction: %v", signErr)
-				}
+	var finalTx *types.Transaction
+	var finalNonce uint64
+	if err != nil && strings.Contains(err.Error(), "replacement transaction underpriced") {
+		// -- bump flow --
 
-				if retryErr := c.client.SendTransaction(ctx, newSignedTx); retryErr != nil {
-					return fmt.Errorf("failed to send retry transaction: %v", retryErr)
-				}
-
-				txHash := newSignedTx.Hash().Hex()
-				log.Printf("Retry transaction sent successfully with nonce %d: %s", newNonce, txHash)
-
-				return nil
-			}
+		// a) resync nonce
+		if resyncErr := c.resyncNonce(auth.From); resyncErr != nil {
+			return fmt.Errorf("resync after underpriced failed: %w", resyncErr)
 		}
-		return fmt.Errorf("failed to send transaction: %v", err)
+
+		// b) bump gas price +10%
+		bumped := new(big.Int).Mul(gasPrice, big.NewInt(110))
+		gasPrice = bumped.Div(bumped, big.NewInt(100))
+		log.Printf("Bumping gas price to %s and retrying", gasPrice)
+
+		// c) rebuild & re-sign
+		finalNonce = c.nonceManager.GetNonce(auth.From)
+		bumpedTx := types.NewTransaction(finalNonce, c.contractAddress, big.NewInt(0), gasLimit, gasPrice, input)
+		newSigned, bumpErr := types.SignTx(bumpedTx, types.NewEIP155Signer(chainID), privkey)
+		if bumpErr != nil {
+			return fmt.Errorf("failed to sign bumped tx: %w", bumpErr)
+		}
+		if bumpErr = c.client.SendTransaction(ctx, newSigned); bumpErr != nil {
+			return fmt.Errorf("failed to send bumped tx: %w", bumpErr)
+		}
+		log.Printf("Bumped tx sent: %s (nonce %d)", newSigned.Hash().Hex(), finalNonce)
+
+		finalTx = newSigned
+	} else if err != nil {
+		// non‐retriable error
+		return fmt.Errorf("send transaction failed: %w", err)
+	} else {
+		// first attempt succeeded
+		finalTx = signedTx
+		finalNonce = nonce
+		log.Printf("Transaction sent: %s (nonce %d)", signedTx.Hash().Hex(), nonce)
 	}
+
+	// 7) Record into stats & pending map
 	atomic.AddInt64(&c.sent, 1)
-	meta := txMeta{Seq: seq, Node: owner}
+	txHash := finalTx.Hash()
 	c.txHashMapLock.Lock()
-	c.pending[signedTx.Hash()] = meta
+	c.pending[txHash] = txInfo{
+		meta:         txMeta{Seq: seq, Node: owner},
+		dependencies: deps,
+		gasPrice:     gasPrice,
+	}
 	c.txHashMapLock.Unlock()
-	c.receiptQueue <- signedTx.Hash() // enqueue for async confirmation
 
-	txHash := signedTx.Hash().Hex()
-	log.Printf("Transaction sent: %s with nonce %d", txHash, nonce)
+	// 8) Enqueue for async confirmation
+	c.receiptQueue <- txHash
 
-	// Store message hash for dependency tracking as before
-	if len(input) > 4 {
-		dataPart := input[4:]
-		if len(dataPart) > 32 {
-			messageHash := crypto.Keccak256Hash(payloadBytes)
-			var hash32 [32]byte
-			copy(hash32[:], messageHash[:])
-
-			c.txHashMapLock.Lock()
-			c.txHashMap[txHash] = hash32
-			c.txHashMapLock.Unlock()
-
-			log.Printf("Stored transaction hash %s with message hash %x", txHash, hash32)
-			if c.dependencyTracker != nil {
-				c.dependencyTracker.ConfirmMessage(hash32)
-				log.Printf("Confirmed message hash %x", hash32)
-			}
-
-		}
+	// 9) Dependency tracker (if any)
+	if len(input) > 4 && c.dependencyTracker != nil {
+		h := crypto.Keccak256Hash(payloadBytes)
+		var h32 [32]byte
+		copy(h32[:], h[:])
+		c.dependencyTracker.ConfirmMessage(h32)
 	}
 
 	return nil
