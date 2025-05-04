@@ -142,6 +142,10 @@ func (mp *MessageProcessor) processMessage(message t.Message) error {
 	mp.messageHashes[message.DataName] = depHash
 
 	// Check if we should reply
+	if mp.ShouldReplyTo == nil {
+		return nil
+	}
+
 	if mp.ShouldReplyTo(message) {
 		dependencies := [][32]byte{depHash}
 
