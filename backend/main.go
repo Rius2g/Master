@@ -62,7 +62,6 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 				deps = append(deps, lastDep)
 			}
 
-			// Pack the transaction input
 			dataName := fmt.Sprintf("%s-%d-%d", *instanceID, pubID, seq)
 			input, err := contractClient.GetPackedInput(string(payloadBytes), *instanceID, dataName, deps...)
 			if err != nil {
@@ -70,7 +69,7 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 				continue
 			}
 
-			// Precompute message hash (for the *next* iteration)
+			// Precompute message hash
 			newHash := crypto.Keccak256Hash(payloadBytes)
 			var fixedHash [32]byte
 			copy(fixedHash[:], newHash[:])
@@ -88,8 +87,6 @@ func startPublisher(ctx context.Context, contractClient *contract.ContractIntera
 				"dependencies": encodeDeps(deps),
 			})
 
-			// **Only now** that Upload succeeded (and its confirmation has been recorded),
-			// update lastDep for the next message’s dependencies.
 			lastDep = fixedHash
 			seq++
 		}
@@ -180,7 +177,6 @@ func main() {
 		}
 	}()
 
-	// Start publishers as per your chosen mode.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -230,7 +226,6 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan
 
-	// Get cost statistics
 	runEndTime := time.Now()
 	durationSec := runEndTime.Sub(runStartTime).Seconds()
 
@@ -246,7 +241,6 @@ func main() {
 	fmt.Printf("Confirmed messages: %d\n", confirmed)
 
 	// Log the summary of the experiment with cost details
-
 	summary := map[string]any{
 		"event":               "experiment_summary",
 		"node":                *instanceID,
@@ -259,7 +253,6 @@ func main() {
 	}
 	contract.LogJSON(summary)
 
-	// Print human-readable summary to stdout
 	fmt.Printf("Total messages published: %d\n", confirmed)
 	fmt.Printf("Total messages received: %d\n", messagesReceived)
 	fmt.Printf("Run duration: %.2f seconds\n", durationSec)

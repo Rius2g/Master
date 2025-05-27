@@ -318,23 +318,20 @@ func (c *ContractInteractionInterface) GetPackedInput(data, owner, dataName stri
 
 func (c *ContractInteractionInterface) watchNewHeads() {
 	const (
-		maxBatch = 100 // how many receipts to query per block
-		maxStale = 50  // after N blocks without a receipt, give up
+		maxBatch = 100
+		maxStale = 50
 	)
 
 	type pendingInfo struct {
-		meta    txMeta // owner / seq (for stats)
-		addedAt uint64 // block number when we first saw the tx
+		meta    txMeta
+		addedAt uint64
 	}
 
-	// keep a *blockNumber* → []*common.Hash index so we can time-out stale txs
 	staleIndex := make(map[uint64][]common.Hash)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// open a **web-socket** connection – we need the WS endpoint for
-	// subscriptions, *not* the HTTP-JSON-RPC one.
 	wsCli, err := ethclient.Dial(NetworkEndpoint)
 	if err != nil {
 		log.Fatalf("newHeads dial: %v", err)
@@ -356,9 +353,6 @@ func (c *ContractInteractionInterface) watchNewHeads() {
 
 		case hdr := <-headers:
 			number := hdr.Number.Uint64()
-			// ----------------------------------------------------------------
-			// 1) collect a *snapshot* of hashes that are still pending
-			// ----------------------------------------------------------------
 			c.txHashMapLock.RLock()
 			pendingNow := make([]common.Hash, 0, len(c.pending))
 			for h := range c.pending {
@@ -369,10 +363,6 @@ func (c *ContractInteractionInterface) watchNewHeads() {
 			if len(pendingNow) == 0 {
 				continue // nothing to do for this block
 			}
-
-			// ----------------------------------------------------------------
-			// 2) batch receipts (bounded)
-			// ----------------------------------------------------------------
 			for start := 0; start < len(pendingNow); start += maxBatch {
 				end := start + maxBatch
 				if end > len(pendingNow) {
@@ -392,34 +382,27 @@ func (c *ContractInteractionInterface) watchNewHeads() {
 					continue
 				}
 
-				// ------------------------------------------------------------
-				// 3) process results
-				// ------------------------------------------------------------
 				for _, be := range batch {
 					r := be.Result.(*types.Receipt)
-					if r == nil || r.BlockNumber == nil { // still pending
+					if r == nil || r.BlockNumber == nil {
 						continue
 					}
-					if r.Status != types.ReceiptStatusSuccessful { // failed tx
+					if r.Status != types.ReceiptStatusSuccessful {
 						c.removePending(r.TxHash, false)
 						continue
 					}
-					// success: mark confirmed
 					c.removePending(r.TxHash, true)
 				}
 			}
 
-			// ----------------------------------------------------------------
-			// 4) mark when each hash became “stale” so we can eventually drop
-			// ----------------------------------------------------------------
 			staleBlock := number - maxStale
 			for h := range c.pending {
 				info := c.pending[h]
-				staleIndex[info.meta.Seq] = append(staleIndex[info.meta.Seq], h) // simplified index
+				staleIndex[info.meta.Seq] = append(staleIndex[info.meta.Seq], h)
 			}
 			if hashes := staleIndex[staleBlock]; len(hashes) > 0 {
 				for _, h := range hashes {
-					c.removePending(h, false) // drop as “gave up”
+					c.removePending(h, false)
 				}
 				delete(staleIndex, staleBlock)
 			}
@@ -427,7 +410,6 @@ func (c *ContractInteractionInterface) watchNewHeads() {
 	}
 }
 
-// removePending takes care of both the map and the stats counter.
 func (c *ContractInteractionInterface) removePending(h common.Hash, confirmed bool) {
 	c.txHashMapLock.Lock()
 	info, ok := c.pending[h]
@@ -450,7 +432,6 @@ func (c *ContractInteractionInterface) removePending(h common.Hash, confirmed bo
 func (c *ContractInteractionInterface) getStoredData(id *big.Int) (t.StoredData, error) {
 	var out t.StoredData
 
-	// 1) Pack & call
 	in, err := c.contractABI.Pack("getStoredData", id)
 	if err != nil {
 		return out, err
@@ -464,7 +445,6 @@ func (c *ContractInteractionInterface) getStoredData(id *big.Int) (t.StoredData,
 		return out, err
 	}
 
-	// 2) Unpack → always one slot
 	vals, err := c.contractABI.Unpack("getStoredData", ret)
 	if err != nil {
 		return out, err
@@ -473,13 +453,10 @@ func (c *ContractInteractionInterface) getStoredData(id *big.Int) (t.StoredData,
 		return out, fmt.Errorf("expected 1 output, got %d", len(vals))
 	}
 
-	// Helper to normalize dependencies from either [][]byte or [][32]byte
 	normalizeDeps := func(raw any) ([][32]byte, error) {
-		// Try the common case: a Go slice of [32]byte
 		if arr32, ok := raw.([][32]byte); ok {
 			return arr32, nil
 		}
-		// Fallback: a slice of byte‐slices
 		if bb, ok := raw.([][]byte); ok {
 			deps := make([][32]byte, len(bb))
 			for i, b := range bb {
@@ -492,9 +469,7 @@ func (c *ContractInteractionInterface) getStoredData(id *big.Int) (t.StoredData,
 
 	v := vals[0]
 
-	// 3a) CASE A: struct with fields
 	if rv := reflect.ValueOf(v); rv.Kind() == reflect.Struct {
-		// Extract fields by name
 		data := rv.FieldByName("Data").Bytes()
 		owner := rv.FieldByName("Owner").String()
 		name := rv.FieldByName("DataName").String()
@@ -517,7 +492,6 @@ func (c *ContractInteractionInterface) getStoredData(id *big.Int) (t.StoredData,
 		}, nil
 	}
 
-	// 3b) CASE B: []any tuple
 	tuple, ok := v.([]any)
 	if !ok || len(tuple) != 6 {
 		return out, fmt.Errorf("unexpected return shape: %T", v)
@@ -625,7 +599,6 @@ func (c *ContractInteractionInterface) Sent() int64 {
 	return atomic.LoadInt64(&c.sent)
 }
 
-// Modified executeTransaction function to wait for transaction confirmation
 func (c *ContractInteractionInterface) executeTransaction(
 	payloadBytes []byte,
 	input []byte,
@@ -633,18 +606,15 @@ func (c *ContractInteractionInterface) executeTransaction(
 	owner string,
 	seq uint64,
 ) error {
-	// 1) Synchronize across goroutines
 	c.txLock.Lock()
 	defer c.txLock.Unlock()
 
-	// 2) Prepare signer and chain ID
 	privkey, err := crypto.HexToECDSA(strings.TrimPrefix(c.privateKey, "0x"))
 	if err != nil {
 		return fmt.Errorf("failed to parse private key: %w", err)
 	}
 	chainID := big.NewInt(43113)
 
-	// 3) Build base transaction parameters
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -653,24 +623,21 @@ func (c *ContractInteractionInterface) executeTransaction(
 
 	gasPrice, err := c.client.SuggestGasPrice(gasPriceCtx)
 	if err != nil {
-		gasPrice = big.NewInt(25_000_000_000) // fallback 25 Gwei
+		gasPrice = big.NewInt(25_000_000_000)
 		log.Printf("Using fallback gas price: %s", gasPrice)
 	}
 
-	// Cap at 100 Gwei
 	capPrice := big.NewInt(100_000_000_000)
 	if gasPrice.Cmp(capPrice) > 0 {
 		gasPrice = capPrice
 	}
 
-	// 4) Determine nonce
 	auth, _ := bind.NewKeyedTransactorWithChainID(privkey, chainID)
 	nonce := c.nonceManager.GetNonce(auth.From)
 	if nonce%50 == 0 {
 		go c.resyncNonce(auth.From)
 	}
 
-	// 5) Build & sign first attempt
 	gasLimit := uint64(8_000_000)
 	tx := types.NewTransaction(nonce, c.contractAddress, big.NewInt(0), gasLimit, gasPrice, input)
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privkey)
@@ -678,24 +645,22 @@ func (c *ContractInteractionInterface) executeTransaction(
 		return fmt.Errorf("failed to sign tx: %w", err)
 	}
 
-	// 6) Attempt to send
 	err = c.client.SendTransaction(ctx, signedTx)
 	var finalTx *types.Transaction
 	var finalNonce uint64
 	if err != nil && strings.Contains(err.Error(), "replacement transaction underpriced") {
-		// -- bump flow --
 
-		// a) resync nonce
+		// resync nonce
 		if resyncErr := c.resyncNonce(auth.From); resyncErr != nil {
 			return fmt.Errorf("resync after underpriced failed: %w", resyncErr)
 		}
 
-		// b) bump gas price +10%
+		// bump gas price +10%
 		bumped := new(big.Int).Mul(gasPrice, big.NewInt(110))
 		gasPrice = bumped.Div(bumped, big.NewInt(100))
 		log.Printf("Bumping gas price to %s and retrying", gasPrice)
 
-		// c) rebuild & re-sign
+		// rebuild & re-sign
 		finalNonce = c.nonceManager.GetNonce(auth.From)
 		bumpedTx := types.NewTransaction(finalNonce, c.contractAddress, big.NewInt(0), gasLimit, gasPrice, input)
 		newSigned, bumpErr := types.SignTx(bumpedTx, types.NewEIP155Signer(chainID), privkey)
@@ -709,7 +674,6 @@ func (c *ContractInteractionInterface) executeTransaction(
 
 		finalTx = newSigned
 	} else if err != nil {
-		// non‐retriable error
 		return fmt.Errorf("send transaction failed: %w", err)
 	} else {
 		// first attempt succeeded
@@ -718,7 +682,6 @@ func (c *ContractInteractionInterface) executeTransaction(
 		log.Printf("Transaction sent: %s (nonce %d)", signedTx.Hash().Hex(), nonce)
 	}
 
-	// 7) Record into stats & pending map
 	atomic.AddInt64(&c.sent, 1)
 	txHash := finalTx.Hash()
 	c.txHashMapLock.Lock()
@@ -729,10 +692,8 @@ func (c *ContractInteractionInterface) executeTransaction(
 	}
 	c.txHashMapLock.Unlock()
 
-	// 8) Enqueue for async confirmation
 	c.receiptQueue <- txHash
 
-	// 9) Dependency tracker (if any)
 	if len(input) > 4 && c.dependencyTracker != nil {
 		h := crypto.Keccak256Hash(payloadBytes)
 		var h32 [32]byte

@@ -33,7 +33,6 @@ func (nm *NonceManager) GetNonce(address common.Address) uint64 {
 		return nm.initialNonce
 	}
 
-	// Return current nonce and increment for next use
 	currentNonce := nonce
 	nm.nonces[address] = nonce + 1
 	return currentNonce

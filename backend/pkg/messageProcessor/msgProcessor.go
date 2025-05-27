@@ -142,6 +142,10 @@ func (mp *MessageProcessor) processMessage(message t.Message) error {
 	mp.messageHashes[message.DataName] = depHash
 
 	// Check if we should reply
+	if mp.ShouldReplyTo == nil {
+		return nil
+	}
+
 	if mp.ShouldReplyTo(message) {
 		dependencies := [][32]byte{depHash}
 
@@ -186,7 +190,7 @@ func (mp *MessageProcessor) GetMessagesReceived() int {
 
 func extractTimestampFromMessage(message t.Message) string {
 	// Try to parse the message as JSON and extract publishedAt field
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal([]byte(message.Content), &payload); err == nil {
 		if timestamp, ok := payload["publishedAt"].(string); ok {
 			return timestamp

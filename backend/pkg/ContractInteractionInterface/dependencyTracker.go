@@ -17,10 +17,8 @@ type DependencyTracker struct {
 	// Maps message hash to list of dependent messages waiting for it
 	waitingOn map[[32]byte][]PendingMessage
 
-	// Mutex for thread safety
 	mu sync.RWMutex
 
-	// Contract interface reference for sending queued messages
 	contract *ContractInteractionInterface
 }
 
@@ -42,7 +40,6 @@ func NewDependencyTracker(contract *ContractInteractionInterface) *DependencyTra
 		contract:          contract,
 	}
 
-	// Start background cleanup process
 	go dt.periodicCleanup()
 
 	return dt
@@ -110,14 +107,12 @@ func (dt *DependencyTracker) IsConfirmed(messageHash [32]byte) bool {
 // ConfirmMessage marks a message as confirmed and replays any waiting messages.
 func (dt *DependencyTracker) ConfirmMessage(mHash [32]byte) {
 
-	// 1) atomically pull out and delete that queue
 	dt.mu.Lock()
 	dt.confirmedMessages[mHash] = true
 	waiting := dt.waitingOn[mHash]
 	delete(dt.waitingOn, mHash)
 	dt.mu.Unlock()
 
-	// 2) for each waiting message, check all its deps
 	for _, msg := range waiting {
 		if dt.allDepsConfirmed(msg.Dependencies) {
 			go func(pm PendingMessage) {
@@ -174,10 +169,9 @@ func (dt *DependencyTracker) cleanupAndRetry() {
 	defer dt.mu.Unlock()
 
 	now := time.Now()
-	retryThreshold := 60 * time.Second // Retry messages after 1 minute
-	maxRetries := 5                    // Give up after 5 retries
+	retryThreshold := 60 * time.Second
+	maxRetries := 5
 
-	// Track dependencies to remove
 	var depsToRemove [][32]byte
 
 	for dep, messages := range dt.waitingOn {
